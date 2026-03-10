@@ -1,0 +1,3 @@
+[submodule "virt-tools"]
+	path = virt-tools
+	url = git@github.com:sombrafam/virt-tools.git
