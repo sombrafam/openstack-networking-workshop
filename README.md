@@ -29,14 +29,15 @@ data-plane and control-plane that underpin OpenStack/OVN.
 
 ## 📚 How It Works
 
-Each lab has two files:
+Each lab folder includes:
 - **`README.md`** — The lab description: objectives, concepts, architecture
   diagrams, and exercises to work through. **No solutions.**
-- **`solution.md`** — The full walkthrough with commands and expected output.
+- **`labXX-solution.md`** — The full walkthrough with commands and expected
+  output for the **previous** lab (released in the next lab folder).
 
 ### Class-by-Class Delivery
 
-On each new class students attempt each lab independently before seeing the
+In each class, students attempt the current lab independently before seeing the
 solution in the next class. The solution for the **previous** lab is always
 bundled inside the **current** lab's folder — students only see it after the
 next session is unlocked.
@@ -44,8 +45,6 @@ next session is unlocked.
 
 ## 📖 Further Reading
 
-- [Full Project Spec](untracked/SPEC.md)
 - `man 7 ovn-architecture`
 - [OVN documentation](https://www.ovn.org/)
 - [Open vSwitch documentation](https://www.openvswitch.org/)
-
