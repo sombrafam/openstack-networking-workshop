@@ -114,7 +114,7 @@ In an OpenStack compute node with the OVN mechanism driver:
 - `br-ex` / `br-provider` is the external bridge — connects to the physical
   network.
 - All forwarding rules on `br-int` are installed as OpenFlow rules by
-  `ovn-controller` (covered in Lab 6).
+  `ovn-controller` (covered in Lab 5).
 
 ---
 
@@ -282,4 +282,3 @@ bridges. We will also provide the **solution** for this lab's exercises.
 ---
 
 *Lab 3 of 5 — OpenStack Networking Workshop*
-
