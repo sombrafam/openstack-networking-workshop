@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenStack Networking Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --text:#111;--muted:#5e5e5e;--subtle:#888;--bg:#fff;--soft:#f7f7f7;--alt:#fafafa;
+  --border:#e5e5e5;--border2:#cdcdcd;--accent:#E95420;--link:#06c;--link-h:#004999;
+  --note:#335280;--note-bg:#f0f5fb;--warn:#c7400e;--warn-bg:#fdf2ee;--tip:#0e8420;--tip-bg:#effaf1;
+  --sans:'Ubuntu',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'Ubuntu Mono','SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);font-size:16px;line-height:1.6;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+
+/* Header */
+header.site{position:sticky;top:0;z-index:100;height:56px;background:#2c001e;color:#fff;display:flex;align-items:center;padding:0 24px}
+header.site .brand{display:flex;align-items:center;gap:12px;font-weight:500}
+header.site .logo{width:28px;height:28px;background:var(--accent);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+header.site nav{margin-left:auto;display:flex;gap:20px}
+header.site nav a{color:#fff;text-decoration:none;opacity:.85;font-size:14px;cursor:pointer}
+header.site nav a:hover,header.site nav a.active{opacity:1;border-bottom:2px solid var(--accent);padding-bottom:4px}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 56px)}
+aside.side{background:var(--soft);border-right:1px solid var(--border);padding:24px 16px 32px;font-size:14px;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px}
+aside.side h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--subtle);margin:18px 0 6px;font-weight:700}
+aside.side h4:first-child{margin-top:0}
+aside.side ul{list-style:none;padding:0;margin:0 0 6px}
+aside.side li a{display:block;padding:5px 10px;color:var(--text);text-decoration:none;border-radius:3px;cursor:pointer}
+aside.side li a:hover{background:#ececec}
+aside.side li a.cur{background:#fff;color:var(--accent);font-weight:500;border-left:3px solid var(--accent);padding-left:7px}
+
+main{padding:32px 48px;max-width:920px}
+.bc{font-size:13px;color:var(--muted);margin:0 0 8px}
+.bc .sep{margin:0 6px;color:var(--subtle)}
+h1{font-size:32px;font-weight:300;margin:8px 0 24px;line-height:1.25}
+h2{font-size:22px;font-weight:500;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+h3{font-size:17px;font-weight:500;margin:24px 0 8px}
+p{margin:0 0 14px}
+a{color:var(--link);text-decoration:none}
+a:hover{color:var(--link-h);text-decoration:underline}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin:4px 0}
+
+/* Meta + tables */
+dl.meta{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;background:var(--alt);border:1px solid var(--border);border-left:3px solid var(--accent);padding:12px 16px;margin:0 0 24px;font-size:14px}
+dl.meta dt{font-weight:500;color:var(--muted)}
+dl.meta dd{margin:0}
+table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--soft);font-weight:500;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+
+/* Code */
+code{font-family:var(--mono);font-size:.92em;background:var(--soft);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+pre.sh{background:#1d1d1d;color:#eee;padding:14px 16px;border-radius:4px;font-family:var(--mono);font-size:13.5px;line-height:1.5;overflow-x:auto;margin:0 0 16px;border-left:3px solid var(--accent)}
+pre.sh .p{color:#8be9fd}
+pre.sh .r{color:#ff9266}
+pre.sh .p::before{content:"$ "}
+pre.sh .r::before{content:"# "}
+
+/* Diagram */
+.diag{font-family:var(--mono);font-size:12.5px;line-height:1.4;white-space:pre;background:var(--soft);border:1px solid var(--border);padding:12px 14px;border-radius:4px;margin:0 0 18px;overflow-x:auto;color:#333}
+
+/* Admonitions */
+.adm{padding:10px 14px;border-radius:3px;margin:14px 0;border-left:3px solid;font-size:14.5px}
+.adm .l{font-weight:500;display:block;margin-bottom:3px;font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+.adm p{margin:0}
+.adm.note{background:var(--note-bg);border-color:var(--note)}.adm.note .l{color:var(--note)}
+.adm.warn{background:var(--warn-bg);border-color:var(--warn)}.adm.warn .l{color:var(--warn)}
+.adm.tip{background:var(--tip-bg);border-color:var(--tip)}.adm.tip .l{color:var(--tip)}
+
+/* Exercise */
+.ex{background:var(--alt);border:1px solid var(--border);border-radius:4px;padding:14px 18px;margin:0 0 18px}
+.ex h3{margin-top:0;color:var(--accent)}
+.ex .v{font-weight:500;color:var(--muted);margin:10px 0 4px}
+
+/* Page nav */
+.pgn{display:flex;justify-content:space-between;gap:16px;margin:36px 0 0;border-top:1px solid var(--border);padding-top:18px}
+.pgn a{display:block;padding:10px 14px;border:1px solid var(--border);border-radius:4px;flex:1;max-width:48%;cursor:pointer}
+.pgn a:hover{border-color:var(--accent);text-decoration:none}
+.pgn a.next{text-align:right}
+.pgn .lbl{display:block;font-size:11px;color:var(--subtle);text-transform:uppercase;letter-spacing:.05em}
+.pgn .ttl{display:block;color:var(--accent);font-weight:500;font-size:14px;margin-top:2px}
+
+/* Lab env terminal */
+.labenv{margin:14px 0 22px;border:1px solid var(--border2);border-radius:5px;overflow:hidden;background:#1d1d1d}
+.labenv .bar{background:#2c001e;color:#fff;padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:10px}
+.labenv .bar .dot{width:10px;height:10px;background:var(--accent);border-radius:50%}
+.labenv .bar .t{flex:1}
+.labenv .bar button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);padding:3px 9px;border-radius:3px;font-size:11px;cursor:pointer;font-family:var(--sans)}
+.labenv .bar button:hover{background:rgba(255,255,255,.18)}
+.labenv .out{font-family:var(--mono);font-size:13px;line-height:1.45;color:#eee;padding:12px 14px;height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.labenv .out .cmd{color:#8be9fd}
+.labenv .out .err{color:#ff6e6e}
+.labenv .out .info{color:#8e8e8e;font-style:italic}
+.labenv .in{display:flex;align-items:center;background:#111;padding:8px 12px;border-top:1px solid #333}
+.labenv .in .ps{color:#8be9fd;font-family:var(--mono);font-size:13px;margin-right:8px;white-space:nowrap}
+.labenv .in input{flex:1;background:transparent;border:0;color:#eee;font-family:var(--mono);font-size:13px;outline:none}
+.labenv .hint{padding:6px 14px;background:#161616;color:#888;font-size:11.5px;border-top:1px solid #2a2a2a;font-family:var(--mono)}
+
+/* Hero on overview */
+.hero{background:linear-gradient(135deg,#2c001e 0%,#5e2750 100%);color:#fff;padding:36px 44px;border-radius:6px;margin:0 0 28px}
+.hero h1{color:#fff;font-size:30px;margin:0 0 8px;font-weight:300}
+.hero p{font-size:16px;opacity:.9;margin:0 0 4px;max-width:640px}
+.lab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0 26px}
+.lab-card{border:1px solid var(--border);border-radius:5px;padding:14px 16px;text-decoration:none!important;color:var(--text);cursor:pointer;display:block}
+.lab-card:hover{border-color:var(--accent);color:var(--text)}
+.lab-card .n{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.lab-card .ti{display:block;font-weight:500;margin:3px 0;color:var(--text)}
+.lab-card .d{font-size:13px;color:var(--muted);margin:0}
+
+/* Sections */
+.page{display:none}
+.page.active{display:block}
+
+/* Footer */
+footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;color:var(--muted);text-align:center}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside.side{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--border)}
+  main{padding:22px}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <span class="brand"><span class="logo">O</span><span>OpenStack Networking Workshop</span></span>
+  <nav>
+    <a data-go="overview" class="active">Overview</a>
+    <a data-go="getting-started">Getting started</a>
+    <a data-go="lab-env">Lab environment</a>
+    <a data-go="reference">Reference</a>
+  </nav>
+</header>
+
+<div class="layout">
+<aside class="side">
+  <h4>Tutorial</h4>
+  <ul>
+    <li><a data-go="overview" class="navlink">Overview</a></li>
+    <li><a data-go="getting-started" class="navlink">Getting started</a></li>
+    <li><a data-go="lab-env" class="navlink">Lab environment</a></li>
+  </ul>
+  <h4>Fundamentals</h4>
+  <ul>
+    <li><a data-go="lab1" class="navlink">1. TAP devices &amp; namespaces</a></li>
+    <li><a data-go="lab2" class="navlink">2. Veth pairs</a></li>
+  </ul>
+  <h4>Open vSwitch</h4>
+  <ul>
+    <li><a data-go="lab3" class="navlink">3. OVS as an L2 switch</a></li>
+    <li><a data-go="lab4" class="navlink">4. OpenFlow rules &amp; tunnels</a></li>
+  </ul>
+  <h4>OVN</h4>
+  <ul>
+    <li><a data-go="lab5" class="navlink">5. OVN basics</a></li>
+  </ul>
+  <h4>Reference</h4>
+  <ul>
+    <li><a data-go="reference" class="navlink">Command reference</a></li>
+  </ul>
+</aside>
+
+<main>
+
+<!-- ============== OVERVIEW ============== -->
+<section id="overview" class="page active">
+  <div class="hero">
+    <h1>OpenStack Networking Workshop</h1>
+    <p>Build a complete OpenStack-style virtual network from first principles &mdash; namespaces, veth pairs, Open vSwitch, OpenFlow, and finally OVN.</p>
+  </div>
+  <p>This workshop walks you, hands-on, through the same data-plane primitives OpenStack Neutron uses under the hood. Five labs, roughly 6.5 hours end to end, no real cloud required &mdash; everything can be done in the embedded mock lab environment.</p>
+
+  <h2>The five labs</h2>
+  <div class="lab-grid">
+    <a class="lab-card" data-go="lab1"><span class="n">Lab 1 · ~45 min</span><span class="ti">TAP devices &amp; namespaces</span><p class="d">Isolation primitives: virtual NICs and per-process network stacks.</p></a>
+    <a class="lab-card" data-go="lab2"><span class="n">Lab 2 · ~45 min</span><span class="ti">Veth pairs</span><p class="d">Connect two namespaces and watch ARP fly across the wire.</p></a>
+    <a class="lab-card" data-go="lab3"><span class="n">Lab 3 · ~1 hr</span><span class="ti">OVS as an L2 switch</span><p class="d">Three namespaces, one virtual switch, MAC learning in action.</p></a>
+    <a class="lab-card" data-go="lab4"><span class="n">Lab 4 · ~1.5 hr</span><span class="ti">OpenFlow rules &amp; tunnels</span><p class="d">Program OVS by hand. Drop traffic with a flow. Meet VXLAN and Geneve.</p></a>
+    <a class="lab-card" data-go="lab5"><span class="n">Lab 5 · ~2.5 hr</span><span class="ti">OVN basics</span><p class="d">Logical switches, routers, ACLs, native DHCP. Map it all to Neutron.</p></a>
+  </div>
+
+  <h2>What you will learn</h2>
+  <ul>
+    <li>How Linux network namespaces, veth pairs, and TAP devices isolate and connect virtual NICs.</li>
+    <li>How Open vSwitch differs from a Linux bridge, and why OVN sits on top of OVS.</li>
+    <li>How OpenFlow rules are matched, prioritised, and chained across tables.</li>
+    <li>How VXLAN encapsulates Layer&nbsp;2 over a routed underlay &mdash; and why OVN prefers Geneve.</li>
+    <li>How every OVN concept (logical switch, router, ACL, DHCP options) maps onto Neutron CLI calls.</li>
+  </ul>
+
+  <h2>Recommended path</h2>
+  <ol>
+    <li>Read <a data-go="getting-started">Getting started</a> for prerequisites and environment options.</li>
+    <li>Skim the <a data-go="lab-env">Lab environment</a> page to learn the embedded terminal.</li>
+    <li>Work through Labs 1&ndash;5 in order &mdash; each builds on the previous.</li>
+    <li>Keep the <a data-go="reference">Command reference</a> open in another tab.</li>
+  </ol>
+</section>
+
+<!-- ============== GETTING STARTED ============== -->
+<section id="getting-started" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Getting started</p>
+  <h1>Getting started</h1>
+  <p>This workshop is hands-on. You will run <code>ip netns</code>, <code>ovs-vsctl</code>, <code>ovn-nbctl</code> and friends. You can do that in three different environments &mdash; pick whichever suits you.</p>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>Comfort with the Linux command line.</li>
+    <li>Basic networking: IP addresses, subnets, MAC addresses, ARP, ICMP.</li>
+    <li>For the real-host options: a recent Ubuntu (22.04 or newer) and <code>sudo</code> rights.</li>
+  </ul>
+
+  <h2>Option 1: The mock lab environment (recommended)</h2>
+  <p>The fastest way to start. Every lab page embeds an interactive terminal that simulates the commands you would run on a real host. No VM, no installs, no risk of breaking your laptop.</p>
+  <p>Open any lab and start typing. The terminal seeds the state from the previous lab so you can pick up where you left off.</p>
+  <div class="adm tip"><span class="l">Best for</span><p>Reading and learning &mdash; you can complete every exercise this way.</p></div>
+
+  <h2>Option 2: A single Linux VM</h2>
+  <p>If you want the real thing, the simplest setup is a single Ubuntu VM with everything installed locally:</p>
+<pre class="sh"><span class="r">apt update</span>
+<span class="r">apt install -y iproute2 openvswitch-switch ovn-central ovn-host tcpdump</span></pre>
+  <p>Every command in every lab works on this single host. The chassis IP and tunnel endpoint are simply <code>127.0.0.1</code>.</p>
+
+  <h2>Option 3: A multi-node setup</h2>
+  <p>For the full distributed experience &mdash; Geneve tunnels between real chassis &mdash; you need two or more Linux hosts. See the <a data-go="reference">Reference</a>, section <em>Multi-node setup guidance</em>, for the broad strokes.</p>
+
+  <h2>Privileges and cleanup</h2>
+  <p>Every command in this workshop requires root or <code>sudo</code>. The mock environment runs as root. On real hosts, prefix with <code>sudo</code>.</p>
+  <p>Each lab ends with a cleanup step. If you skip it you can always wipe namespaces and the bridge by hand:</p>
+<pre class="sh"><span class="r">for ns in $(ip netns list | awk '{print $1}'); do ip netns del $ns; done</span>
+<span class="r">ovs-vsctl del-br br-int 2&gt;/dev/null || true</span></pre>
+</section>
+
+<!-- ============== LAB ENV ============== -->
+<section id="lab-env" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Lab environment</p>
+  <h1>The mock lab environment</h1>
+  <p>Every lab page embeds a terminal that simulates the Linux networking stack &mdash; namespaces, veth pairs, OVS bridges, OpenFlow rules and OVN logical resources. It is not a real kernel; it is a deliberately small model that is accurate enough to teach the concepts.</p>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="fresh" data-title="Demo terminal"></div>
+
+  <h2>Supported commands</h2>
+  <table>
+    <thead><tr><th>Family</th><th>Commands</th></tr></thead>
+    <tbody>
+      <tr><td>Namespaces</td><td><code>ip netns add/del/list/exec</code></td></tr>
+      <tr><td>Links &amp; addresses</td><td><code>ip link add/set/show</code>, <code>ip addr add/show</code>, <code>ip route add/show</code>, <code>ip neigh show</code>, <code>ip tuntap</code></td></tr>
+      <tr><td>OVS</td><td><code>ovs-vsctl add-br/del-br/add-port/show/list-*</code>, <code>ovs-ofctl dump-flows/dump-ports/add-flow/del-flows/show</code>, <code>ovs-appctl fdb/show</code></td></tr>
+      <tr><td>OVN</td><td><code>ovn-nbctl ls-add/lsp-add/lr-add/lrp-add/acl-add/show</code>, <code>ovn-sbctl show/lflow-list</code></td></tr>
+      <tr><td>Diagnostics</td><td><code>ping</code>, <code>tcpdump</code>, <code>systemctl</code>, <code>apt</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>What it does not simulate</h2>
+  <ul>
+    <li>Real kernel behaviour &mdash; no actual packets are sent.</li>
+    <li>Anything outside the listed command families.</li>
+    <li>Persistent state across page reloads; press <strong>Reset</strong> on the toolbar to start over.</li>
+  </ul>
+
+  <div class="adm note"><span class="l">Type help</span><p>Inside any terminal, type <code>help</code> to see the supported commands, or <code>state</code> to dump the current simulated topology.</p></div>
+</section>
+
+<!-- ============== LAB 1 ============== -->
+<section id="lab1" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Fundamentals<span class="sep">›</span>Lab 1</p>
+  <h1>Lab 1 &mdash; TAP devices &amp; namespaces</h1>
+  <dl class="meta"><dt>Tier</dt><dd>Fundamentals</dd><dt>Duration</dt><dd>~45 minutes</dd><dt>Prerequisites</dt><dd>Comfort with the Linux CLI and basic networking.</dd></dl>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Understand what a network namespace is and why OpenStack uses them.</li>
+    <li>Create, list and delete namespaces.</li>
+    <li>Create a TAP device and place it inside a namespace.</li>
+    <li>Verify isolation: namespaces have independent interfaces, addresses and routes.</li>
+  </ul>
+
+  <h2>Background</h2>
+  <p>A <strong>network namespace</strong> gives a process its own private network stack: its own interfaces, its own ARP table, its own routes. Two namespaces cannot see each other&rsquo;s traffic unless you explicitly connect them. This is the same isolation primitive containers use.</p>
+  <p>A <strong>TAP device</strong> is a virtual Layer&nbsp;2 NIC. The kernel treats it as a real Ethernet interface; a userspace program (or, in OpenStack, QEMU) can read and write Ethernet frames through it. Every VM in OpenStack has a TAP device on the hypervisor.</p>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="fresh" data-title="Lab 1 terminal"></div>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; List existing namespaces</h3>
+<pre class="sh"><span class="r">ip netns list</span></pre>
+    <p class="v">Verify:</p><ul><li>On a fresh host the list is empty.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Create two namespaces</h3>
+<pre class="sh"><span class="r">ip netns add ns-a</span>
+<span class="r">ip netns add ns-b</span>
+<span class="r">ip netns list</span></pre>
+    <p class="v">Verify:</p><ul><li><code>ns-a</code> and <code>ns-b</code> appear in the list.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Inspect a namespace</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ip link show</span>
+<span class="r">ip netns exec ns-a ip addr show</span></pre>
+    <p class="v">Questions:</p>
+    <ul><li>What interfaces exist inside <code>ns-a</code> by default?</li><li>Is the loopback (<code>lo</code>) up or down?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Bring up loopback inside a namespace</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ip link set lo up</span>
+<span class="r">ip netns exec ns-a ping -c2 127.0.0.1</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Create a TAP device</h3>
+<pre class="sh"><span class="r">ip tuntap add dev tap-a mode tap</span>
+<span class="r">ip link show tap-a</span></pre>
+    <p class="v">Verify:</p><ul><li>The TAP device exists in the root namespace.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Clean up</h3>
+<pre class="sh"><span class="r">ip link del tap-a</span>
+<span class="r">ip netns del ns-a</span>
+<span class="r">ip netns del ns-b</span></pre>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>What kernel feature makes namespaces possible?</li>
+    <li>Why does OpenStack put each router into its own network namespace (in legacy ML2)?</li>
+    <li>How does a TAP device differ from a veth?</li>
+    <li>If two namespaces both have an interface <code>eth0</code>, do they conflict?</li>
+  </ol>
+
+  <nav class="pgn">
+    <span></span>
+    <a class="next" data-go="lab2"><span class="lbl">Next</span><span class="ttl">Lab 2 &mdash; Veth pairs</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 2 ============== -->
+<section id="lab2" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Fundamentals<span class="sep">›</span>Lab 2</p>
+  <h1>Lab 2 &mdash; Veth pairs</h1>
+  <dl class="meta"><dt>Tier</dt><dd>Fundamentals</dd><dt>Duration</dt><dd>~45 minutes</dd><dt>Prerequisites</dt><dd>Lab 1 completed.</dd></dl>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Explain what a veth pair is and how it differs from a TAP device.</li>
+    <li>Create a veth pair connecting two namespaces.</li>
+    <li>Assign IPs, ping across the pair, and observe ARP.</li>
+  </ul>
+
+  <h2>Background</h2>
+  <p>A <strong>veth pair</strong> is a kernel construct: two virtual Ethernet interfaces wired together back-to-back. Whatever you transmit on one end appears on the other. They are the standard way to connect a namespace (or container) to another namespace or to a bridge.</p>
+  <table>
+    <thead><tr><th>Property</th><th>TAP</th><th>veth pair</th></tr></thead>
+    <tbody>
+      <tr><td>Endpoints</td><td>One (userspace fd on the other side)</td><td>Two interfaces, two ends</td></tr>
+      <tr><td>Typical use</td><td>VM NIC (QEMU)</td><td>Connect namespaces and bridges</td></tr>
+      <tr><td>Created with</td><td><code>ip tuntap add</code></td><td><code>ip link add type veth</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="lab1" data-title="Lab 2 terminal"></div>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Create two namespaces</h3>
+<pre class="sh"><span class="r">ip netns add ns-a</span>
+<span class="r">ip netns add ns-b</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Create a veth pair</h3>
+<pre class="sh"><span class="r">ip link add veth-a type veth peer name veth-b</span>
+<span class="r">ip link show | grep veth</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Move each end into its namespace</h3>
+<pre class="sh"><span class="r">ip link set veth-a netns ns-a</span>
+<span class="r">ip link set veth-b netns ns-b</span></pre>
+    <p class="v">Verify:</p>
+    <ul><li><code>ip link show</code> in the root namespace no longer shows <code>veth-a</code> or <code>veth-b</code>.</li><li><code>ip netns exec ns-a ip link show</code> shows <code>veth-a</code>.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Bring interfaces up</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ip link set lo up</span>
+<span class="r">ip netns exec ns-a ip link set veth-a up</span>
+<span class="r">ip netns exec ns-b ip link set lo up</span>
+<span class="r">ip netns exec ns-b ip link set veth-b up</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Assign IPs</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ip addr add 10.0.0.1/24 dev veth-a</span>
+<span class="r">ip netns exec ns-b ip addr add 10.0.0.2/24 dev veth-b</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Ping across</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ping -c3 10.0.0.2</span></pre>
+    <p class="v">Verify:</p><ul><li>Pings succeed; the namespaces are now connected at Layer&nbsp;2.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Observe ARP</h3>
+<pre class="sh"><span class="r">ip netns exec ns-a ip neigh show</span>
+<span class="r">ip netns exec ns-b ip neigh show</span></pre>
+    <p class="v">Questions:</p>
+    <ul><li>Whose MAC appears in each neighbour table?</li><li>What happens if you delete the entry and ping again?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 8 &mdash; Clean up</h3>
+<pre class="sh"><span class="r">ip netns del ns-a</span>
+<span class="r">ip netns del ns-b</span></pre>
+    <div class="adm note"><span class="l">Tip</span><p>Deleting a namespace also removes any veth ends it holds. The peer end goes away with it.</p></div>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>Why does a veth always come as a pair?</li>
+    <li>What happens to the peer if you delete one end of a veth?</li>
+    <li>In OpenStack, where would you typically find veth pairs?</li>
+  </ol>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab1"><span class="lbl">Previous</span><span class="ttl">Lab 1 &mdash; Namespaces</span></a>
+    <a class="next" data-go="lab3"><span class="lbl">Next</span><span class="ttl">Lab 3 &mdash; OVS as an L2 switch</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 3 ============== -->
+<section id="lab3" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Open vSwitch<span class="sep">›</span>Lab 3</p>
+  <h1>Lab 3 &mdash; OVS as an L2 switch</h1>
+  <dl class="meta"><dt>Tier</dt><dd>Open vSwitch</dd><dt>Duration</dt><dd>~1 hour</dd><dt>Prerequisites</dt><dd>Labs 1 and 2 completed.</dd></dl>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Explain why OpenStack uses OVS rather than the Linux bridge.</li>
+    <li>Create an OVS bridge and connect three namespaces through it.</li>
+    <li>Inspect the default flow table and observe MAC learning.</li>
+  </ul>
+
+  <h2>Why a virtual switch?</h2>
+  <p>In Lab&nbsp;2 you connected two namespaces with one veth pair. For three or more, a full mesh scales as O(N²). A switch reduces that to O(N): each namespace gets one veth, the other end plugs into the switch.</p>
+  <div class="diag">  Full mesh (3 namespaces):     Star via switch:
+
+    ns-a ──── ns-b                ns-a ─┐
+      \      /                    ns-b ─┼── br-int (OVS)
+       ns-c                       ns-c ─┘
+    (3 pairs, O(N²))            (3 pairs, O(N))</div>
+
+  <h2>Why OVS, not the Linux bridge?</h2>
+  <table>
+    <thead><tr><th>Feature</th><th>Linux bridge</th><th>OVS</th></tr></thead>
+    <tbody>
+      <tr><td>MAC learning</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Programmable flow rules</td><td>No</td><td>Yes</td></tr>
+      <tr><td>OpenFlow controller</td><td>No</td><td>Yes</td></tr>
+      <tr><td>VXLAN / Geneve tunnels</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Used by OVN</td><td>No</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="lab2" data-title="Lab 3 terminal"></div>
+
+  <h2>Exercises</h2>
+  <div class="adm note"><span class="l">Naming</span><p>For each namespace <code>ns-X</code>, create a veth pair with two ends: <code>veth-X</code> (inside the namespace) and <code>veth-X-ovs</code> (in the host, plugged into <code>br-int</code>).</p></div>
+
+  <div class="ex"><h3>Exercise 1 &mdash; Install OVS</h3>
+<pre class="sh"><span class="r">apt install -y openvswitch-switch</span></pre>
+    <p>In the mock environment, OVS is pre-installed.</p>
+    <p class="v">Verify:</p><ul><li><code>ovs-vsctl show</code> returns an empty configuration with a version.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Create an OVS bridge</h3>
+<pre class="sh"><span class="r">ovs-vsctl add-br br-int</span>
+<span class="r">ip link set br-int up</span></pre>
+    <p class="v">Verify:</p>
+    <ul><li><code>ovs-vsctl show</code> &mdash; <code>br-int</code> is present.</li><li><code>ovs-ofctl dump-flows br-int</code> &mdash; what flows exist by default?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Connect three namespaces</h3>
+    <p>For each of <code>ns-a</code>, <code>ns-b</code>, <code>ns-c</code>:</p>
+    <ol>
+      <li>Create the namespace.</li>
+      <li>Create a veth pair <code>veth-X</code> / <code>veth-X-ovs</code>.</li>
+      <li>Move <code>veth-X</code> into the namespace.</li>
+      <li>Add <code>veth-X-ovs</code> to <code>br-int</code>.</li>
+      <li>Bring everything up.</li>
+    </ol>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Assign IPs</h3>
+    <ul><li><code>ns-a</code>: <code>192.168.100.10/24</code></li><li><code>ns-b</code>: <code>192.168.100.20/24</code></li><li><code>ns-c</code>: <code>192.168.100.30/24</code></li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Verify connectivity</h3>
+    <p>Ping between every pair. All should succeed thanks to the default <code>NORMAL</code> flow.</p>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Inspect OVS state</h3>
+<pre class="sh"><span class="r">ovs-vsctl show</span>
+<span class="r">ovs-ofctl dump-flows br-int</span>
+<span class="r">ovs-ofctl dump-ports br-int</span>
+<span class="r">ovs-appctl fdb/show br-int</span></pre>
+    <p class="v">Questions:</p>
+    <ul><li>How many flows are installed by default?</li><li>After pinging, what MACs appear in the FDB?</li><li>What does <code>n_packets</code> in <code>dump-flows</code> tell you?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Observe ARP and broadcast</h3>
+    <p>Capture on all three <code>veth-X-ovs</code> ports, clear the ARP cache in <code>ns-a</code>, then ping <code>ns-b</code>.</p>
+    <p class="v">Questions:</p>
+    <ul><li>Does the ARP request appear on <code>veth-c-ovs</code>? Why?</li><li>Does the reply appear there? Why or why not?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 8 &mdash; Clean up</h3>
+<pre class="sh"><span class="r">ovs-vsctl del-br br-int</span>
+<span class="r">ip netns del ns-a; ip netns del ns-b; ip netns del ns-c</span></pre>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>What does the default <code>NORMAL</code> action do?</li>
+    <li>Why does OVN use OVS instead of the Linux bridge?</li>
+    <li>What happens when a frame arrives at OVS with an unknown destination MAC?</li>
+  </ol>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab2"><span class="lbl">Previous</span><span class="ttl">Lab 2 &mdash; Veth pairs</span></a>
+    <a class="next" data-go="lab4"><span class="lbl">Next</span><span class="ttl">Lab 4 &mdash; OpenFlow &amp; tunnels</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 4 ============== -->
+<section id="lab4" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Open vSwitch<span class="sep">›</span>Lab 4</p>
+  <h1>Lab 4 &mdash; OpenFlow rules &amp; tunnels</h1>
+  <dl class="meta"><dt>Tier</dt><dd>Open vSwitch</dd><dt>Duration</dt><dd>~1.5 hours</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;3 completed.</dd></dl>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Understand match, priority, and actions in an OpenFlow rule.</li>
+    <li>Add and remove flows with <code>ovs-ofctl</code>.</li>
+    <li>Implement an ACL by dropping traffic.</li>
+    <li>Explain VXLAN encapsulation and why OVN prefers Geneve.</li>
+  </ul>
+
+  <h2>OpenFlow basics</h2>
+  <p>A flow rule has three parts: <strong>match</strong> (in_port, MAC, IP, ports, &hellip;), <strong>priority</strong> (0&ndash;65535, higher wins), and <strong>actions</strong> (<code>output:&lt;port&gt;</code>, <code>drop</code>, <code>resubmit(,N)</code>, <code>NORMAL</code>, &hellip;).</p>
+  <div class="diag">  Incoming packet
+       │
+       ▼
+  ┌─ Table 0 ──────────────────────────────────────────┐
+  │  priority=200, ip, nw_src=10.0.0.1 → actions=drop  │
+  │  priority=100, ip                  → actions=NORMAL│
+  │  priority=0                        → actions=NORMAL│
+  └────────────────────────────────────────────────────┘</div>
+  <p>First match by descending priority wins.</p>
+
+  <h2>VXLAN &amp; Geneve</h2>
+  <p>VXLAN encapsulates Ethernet frames inside UDP (port 4789). Each tunnel carries a 24-bit VNI (~16M values). OVN uses Geneve instead, because Geneve&rsquo;s TLV headers can carry OVN&rsquo;s logical datapath and port metadata.</p>
+  <table>
+    <thead><tr><th>Property</th><th>VXLAN</th><th>Geneve</th></tr></thead>
+    <tbody>
+      <tr><td>Header</td><td>Fixed</td><td>Extensible TLVs</td></tr>
+      <tr><td>OVN metadata</td><td>Not supported</td><td>Carries datapath + port IDs</td></tr>
+      <tr><td>RFC</td><td>7348</td><td>8926</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="lab4" data-title="Lab 4 terminal"></div>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Default flow and port counters</h3>
+<pre class="sh"><span class="r">ovs-ofctl dump-flows br-int</span>
+<span class="r">ovs-ofctl dump-ports br-int</span>
+<span class="r">ovs-ofctl show br-int</span></pre>
+    <p class="v">Questions:</p>
+    <ul><li>What is the priority and action of the default flow?</li><li>Generate a ping; what changed in <code>n_packets</code>?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Add a custom ACL flow</h3>
+<pre class="sh"><span class="r">ovs-ofctl add-flow br-int \
+  "priority=100,ip,nw_src=192.168.100.30,nw_dst=192.168.100.10,actions=drop"</span></pre>
+    <p class="v">Verify:</p>
+    <ul>
+      <li>Ping from <code>ns-c</code> to <code>ns-a</code> is <strong>blocked</strong>.</li>
+      <li>Ping from <code>ns-c</code> to <code>ns-b</code> still works.</li>
+      <li>Ping from <code>ns-a</code> to <code>ns-c</code> still works.</li>
+    </ul>
+    <p class="v">Question:</p><ul><li>Why is the reverse direction not blocked?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Remove the ACL</h3>
+<pre class="sh"><span class="r">ovs-ofctl del-flows br-int \
+  "ip,nw_src=192.168.100.30,nw_dst=192.168.100.10"</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Port-based match</h3>
+    <p>Drop frames ingressing <code>veth-a-ovs</code> with a specific destination MAC. ARP (broadcast) still works; ICMP is blocked.</p>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Statistics</h3>
+<pre class="sh"><span class="r">ovs-ofctl dump-ports br-int</span>
+<span class="r">ovs-ofctl dump-flows br-int</span></pre>
+    <p class="v">Question:</p><ul><li>Difference between <code>ovs-ofctl dump-flows</code> and <code>ovs-dpctl dump-flows</code>?</li></ul>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>What are the three components of an OpenFlow rule?</li>
+    <li>If two rules match, which wins?</li>
+    <li>How many bits is a VXLAN VNI? Maximum distinct values?</li>
+    <li>Why does OVN use multiple flow tables rather than one flat list?</li>
+  </ol>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab3"><span class="lbl">Previous</span><span class="ttl">Lab 3 &mdash; OVS</span></a>
+    <a class="next" data-go="lab5"><span class="lbl">Next</span><span class="ttl">Lab 5 &mdash; OVN basics</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 5 ============== -->
+<section id="lab5" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>OVN<span class="sep">›</span>Lab 5</p>
+  <h1>Lab 5 &mdash; OVN basics</h1>
+  <dl class="meta"><dt>Tier</dt><dd>OVN</dd><dt>Duration</dt><dd>~2.5 hours</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;4 completed.</dd></dl>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Explain OVN&rsquo;s architecture and its relationship to OVS.</li>
+    <li>Create logical switches, ports, and routers.</li>
+    <li>Bind logical ports to OVS interfaces.</li>
+    <li>Implement ACLs and OVN-native DHCP.</li>
+    <li>Map every OVN concept to its OpenStack Neutron equivalent.</li>
+  </ul>
+
+  <h2>Why OVN?</h2>
+  <p>Programming OVS by hand works for a few ports. For a real cloud with thousands of VMs you need automation. OVN takes high-level intent (&ldquo;create a network&rdquo;), compiles it into logical flows, distributes them, and lets each chassis&rsquo; <code>ovn-controller</code> compile them into local OpenFlow rules.</p>
+
+  <h2>Architecture</h2>
+  <div class="diag">     ┌───────────────────────────┐
+     │       Northbound DB       │  ← Logical topology
+     │  (networks, routers, ACLs)│    (Neutron writes here)
+     └─────────────┬─────────────┘
+                   │
+     ┌─────────────▼─────────────┐
+     │        ovn-northd         │  ← Compiles NB → SB
+     └─────────────┬─────────────┘
+                   │
+     ┌─────────────▼─────────────┐
+     │       Southbound DB       │  ← Logical flows +
+     │  (logical flows, chassis) │    chassis bindings
+     └──────┬─────────────┬──────┘
+            │             │
+  ┌─────────▼──┐    ┌─────▼───────┐
+  │ovn-controller    ovn-controller│
+  │  (Host A)  │    │  (Host B)   │
+  └──────┬─────┘    └──────┬──────┘
+         │                  │
+  ┌──────▼─────┐    ┌──────▼─────┐
+  │  br-int    │    │  br-int    │
+  └────────────┘    └────────────┘</div>
+
+  <h2>Concepts and Neutron equivalents</h2>
+  <table>
+    <thead><tr><th>OVN</th><th>Neutron</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Logical switch</td><td>Network</td><td>Virtual L2 network</td></tr>
+      <tr><td>Logical switch port</td><td>Port</td><td>Virtual NIC</td></tr>
+      <tr><td>Logical router</td><td>Router</td><td>Virtual L3 router</td></tr>
+      <tr><td>ACL</td><td>Security group rule</td><td>Allow/deny on a port</td></tr>
+      <tr><td>DHCP options</td><td>Subnet DHCP settings</td><td>DHCP config</td></tr>
+      <tr><td>Chassis</td><td>Compute/network node</td><td>Host running <code>ovn-controller</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Try it</h2>
+  <div class="labenv" data-scenario="lab5" data-title="Lab 5 terminal"></div>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Install OVN</h3>
+<pre class="sh"><span class="r">apt install -y ovn-central ovn-host</span></pre>
+    <p>In the mock environment, OVN is pre-installed.</p>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Register chassis</h3>
+<pre class="sh"><span class="r">ovs-vsctl set open . \
+  external-ids:ovn-remote=unix:/var/run/ovn/ovnsb_db.sock \
+  external-ids:ovn-encap-type=geneve \
+  external-ids:ovn-encap-ip=127.0.0.1</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Logical switch and ports</h3>
+<pre class="sh"><span class="r">ovn-nbctl ls-add ls1</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-port1</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port1 "aa:bb:cc:00:00:01 10.0.1.10"</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-port2</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port2 "aa:bb:cc:00:00:02 10.0.1.20"</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Bind to namespaces</h3>
+<pre class="sh"><span class="r">ovs-vsctl set interface veth-a-ovs external-ids:iface-id=ls1-port1</span>
+<span class="r">ovs-vsctl set interface veth-b-ovs external-ids:iface-id=ls1-port2</span></pre>
+    <p class="v">Verify:</p><ul><li><code>ovn-sbctl show</code> shows the ports <strong>bound</strong> to the chassis.</li><li>Ping <code>ns-a</code> → <code>ns-b</code> works.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Inspect logical and physical flows</h3>
+<pre class="sh"><span class="r">ovn-sbctl lflow-list ls1</span>
+<span class="r">ovs-ofctl dump-flows br-int</span></pre>
+    <p class="v">Question:</p><ul><li>What does OVN do instead of flooding ARP requests?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; A second logical switch</h3>
+    <p>Create <code>ls2</code> with <code>ns-c</code>, <code>ns-d</code> on <code>10.0.2.0/24</code>. Intra-switch pings work; cross-switch pings do not (no router yet).</p>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Logical router</h3>
+<pre class="sh"><span class="r">ovn-nbctl lr-add lr1</span>
+<span class="r">ovn-nbctl lrp-add lr1 lr1-ls1 aa:bb:cc:00:01:01 10.0.1.1/24</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-lr1</span>
+<span class="r">ovn-nbctl lsp-set-type ls1-lr1 router</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-lr1 router</span>
+<span class="r">ovn-nbctl lsp-set-options ls1-lr1 router-port=lr1-ls1</span></pre>
+    <p>Repeat for <code>ls2</code>. Set default gateways inside each namespace. Ping <code>ns-a</code> → <code>ns-c</code> works.</p>
+  </div>
+  <div class="ex"><h3>Exercise 8 &mdash; ACLs (security groups)</h3>
+<pre class="sh"><span class="r">ovn-nbctl acl-add ls1 from-lport 1000 'ip4' drop</span>
+<span class="r">ovn-nbctl acl-add ls1 from-lport 1100 'ip4 &amp;&amp; icmp4' allow-related</span>
+<span class="r">ovn-nbctl acl-add ls1 from-lport 1100 'ip4 &amp;&amp; tcp &amp;&amp; tcp.dst==22' allow-related</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 9 &mdash; OVN-native DHCP</h3>
+    <p>Create DHCP options for <code>10.0.1.0/24</code>, attach them to the ports, run <code>dhclient</code> inside a namespace. No <code>dnsmasq</code> involved &mdash; DHCP is served by OVS flows.</p>
+  </div>
+  <div class="ex"><h3>Exercise 10 &mdash; Deep inspection</h3>
+<pre class="sh"><span class="r">ovn-nbctl show</span>
+<span class="r">ovn-sbctl show</span>
+<span class="r">ovn-sbctl lflow-list</span>
+<span class="r">ovs-ofctl dump-flows br-int</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 11 &mdash; Capstone: map to OpenStack</h3>
+    <table>
+      <thead><tr><th>What you did</th><th>OpenStack CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>ovn-nbctl ls-add ls1</code></td><td><code>openstack network create net1</code></td></tr>
+        <tr><td><code>ovn-nbctl lsp-add ...</code></td><td><code>openstack port create ...</code></td></tr>
+        <tr><td><code>ovn-nbctl lr-add lr1</code></td><td><code>openstack router create router1</code></td></tr>
+        <tr><td><code>ovn-nbctl acl-add ...</code></td><td><code>openstack security group rule create ...</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>What are the two OVN databases? What does each store?</li>
+    <li>What does <code>ovn-northd</code> do?</li>
+    <li>How does OVN handle DHCP differently from legacy Neutron?</li>
+    <li>Why does OVN use Geneve instead of VXLAN?</li>
+    <li>Walk through the lifecycle of a packet from VM&nbsp;A to VM&nbsp;B on the same logical switch.</li>
+  </ol>
+
+  <p style="margin-top:24px"><strong>Congratulations</strong> &mdash; you have built, by hand, the same topology that OpenStack Neutron creates automatically.</p>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab4"><span class="lbl">Previous</span><span class="ttl">Lab 4 &mdash; OpenFlow</span></a>
+    <a class="next" data-go="reference"><span class="lbl">Next</span><span class="ttl">Command reference</span></a>
+  </nav>
+</section>
+
+<!-- ============== REFERENCE ============== -->
+<section id="reference" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>Reference</p>
+  <h1>Command reference</h1>
+  <p>Consolidated cheat-sheet for every command in the workshop, grouped by tool.</p>
+
+  <h2>Namespaces (<code>ip netns</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ip netns add &lt;name&gt;</code></td><td>Create a namespace.</td></tr>
+    <tr><td><code>ip netns del &lt;name&gt;</code></td><td>Delete a namespace.</td></tr>
+    <tr><td><code>ip netns list</code></td><td>List namespaces.</td></tr>
+    <tr><td><code>ip netns exec &lt;ns&gt; &lt;cmd&gt;</code></td><td>Run a command inside a namespace.</td></tr>
+  </tbody></table>
+
+  <h2>Links, addresses, routes (<code>ip</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ip link add &lt;a&gt; type veth peer name &lt;b&gt;</code></td><td>Create a veth pair.</td></tr>
+    <tr><td><code>ip link set &lt;dev&gt; netns &lt;ns&gt;</code></td><td>Move an interface into a namespace.</td></tr>
+    <tr><td><code>ip link set &lt;dev&gt; up</code></td><td>Bring an interface up.</td></tr>
+    <tr><td><code>ip addr add &lt;ip/prefix&gt; dev &lt;dev&gt;</code></td><td>Assign an IP.</td></tr>
+    <tr><td><code>ip route add default via &lt;gw&gt;</code></td><td>Add a default gateway.</td></tr>
+    <tr><td><code>ip neigh show</code></td><td>Show the ARP cache.</td></tr>
+    <tr><td><code>ip tuntap add dev &lt;name&gt; mode tap</code></td><td>Create a TAP device.</td></tr>
+  </tbody></table>
+
+  <h2>OVS configuration (<code>ovs-vsctl</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ovs-vsctl show</code></td><td>Full OVS configuration.</td></tr>
+    <tr><td><code>ovs-vsctl add-br &lt;name&gt;</code></td><td>Create a bridge.</td></tr>
+    <tr><td><code>ovs-vsctl add-port &lt;br&gt; &lt;port&gt;</code></td><td>Add a port to a bridge.</td></tr>
+    <tr><td><code>ovs-vsctl set interface &lt;dev&gt; external-ids:iface-id=&lt;id&gt;</code></td><td>Bind an OVS interface to an OVN logical port.</td></tr>
+    <tr><td><code>ovs-vsctl set open . external-ids:&lt;k&gt;=&lt;v&gt;</code></td><td>Set OVN chassis identity and encap.</td></tr>
+  </tbody></table>
+
+  <h2>OpenFlow (<code>ovs-ofctl</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ovs-ofctl show &lt;br&gt;</code></td><td>Show port numbers and names.</td></tr>
+    <tr><td><code>ovs-ofctl dump-flows &lt;br&gt;</code></td><td>Show all flow rules with counters.</td></tr>
+    <tr><td><code>ovs-ofctl dump-ports &lt;br&gt;</code></td><td>Per-port statistics.</td></tr>
+    <tr><td><code>ovs-ofctl add-flow &lt;br&gt; &lt;flow&gt;</code></td><td>Install a flow rule.</td></tr>
+    <tr><td><code>ovs-ofctl del-flows &lt;br&gt; &lt;match&gt;</code></td><td>Delete matching flows.</td></tr>
+    <tr><td><code>ovs-appctl fdb/show &lt;br&gt;</code></td><td>Show the MAC learning table.</td></tr>
+  </tbody></table>
+
+  <h2>OVN northbound (<code>ovn-nbctl</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ovn-nbctl show</code></td><td>Show logical topology.</td></tr>
+    <tr><td><code>ovn-nbctl ls-add &lt;name&gt;</code></td><td>Create a logical switch.</td></tr>
+    <tr><td><code>ovn-nbctl lsp-add &lt;sw&gt; &lt;port&gt;</code></td><td>Add a logical port.</td></tr>
+    <tr><td><code>ovn-nbctl lsp-set-addresses &lt;port&gt; "&lt;mac&gt; &lt;ip&gt;"</code></td><td>Set port addresses.</td></tr>
+    <tr><td><code>ovn-nbctl lr-add &lt;name&gt;</code></td><td>Create a logical router.</td></tr>
+    <tr><td><code>ovn-nbctl lrp-add &lt;lr&gt; &lt;port&gt; &lt;mac&gt; &lt;ip/mask&gt;</code></td><td>Add a router port.</td></tr>
+    <tr><td><code>ovn-nbctl acl-add &lt;sw&gt; &lt;dir&gt; &lt;prio&gt; &lt;match&gt; &lt;action&gt;</code></td><td>Add an ACL.</td></tr>
+  </tbody></table>
+
+  <h2>OVN southbound (<code>ovn-sbctl</code>)</h2>
+  <table><thead><tr><th>Command</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>ovn-sbctl show</code></td><td>Chassis and port bindings.</td></tr>
+    <tr><td><code>ovn-sbctl lflow-list [&lt;datapath&gt;]</code></td><td>List logical flows.</td></tr>
+  </tbody></table>
+
+  <h2>Multi-node setup</h2>
+  <p>Every lab here runs on a single host. To extend to a multi-node setup:</p>
+  <ul>
+    <li>Two or more Linux hosts with IP reachability between them.</li>
+    <li>One host runs <code>ovn-central</code> (NB DB, SB DB, <code>ovn-northd</code>).</li>
+    <li>Every host runs <code>ovs-vswitchd</code>, <code>ovsdb-server</code>, and <code>ovn-controller</code>.</li>
+  </ul>
+  <p>Per-chassis configuration:</p>
+<pre class="sh"><span class="r">apt install -y openvswitch-switch ovn-host</span>
+<span class="r">ovs-vsctl set open . \
+  external-ids:ovn-remote=tcp:&lt;central-ip&gt;:6642 \
+  external-ids:ovn-encap-type=geneve \
+  external-ids:ovn-encap-ip=&lt;this-host-tunnel-ip&gt; \
+  external-ids:system-id=&lt;unique-hostname&gt;</span></pre>
+  <p>On the central host, expose the SB and NB databases on the network:</p>
+<pre class="sh"><span class="r">ovn-sbctl set-connection ptcp:6642</span>
+<span class="r">ovn-nbctl set-connection ptcp:6641</span></pre>
+  <p>Once each <code>ovn-controller</code> connects, Geneve tunnels appear automatically on <code>br-int</code>. Verify with <code>ovs-vsctl show</code> and <code>ovn-sbctl show</code>.</p>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><code>man 7 ovs-architecture</code> and <code>man 7 ovn-architecture</code>.</li>
+    <li>RFC&nbsp;7348 (VXLAN), RFC&nbsp;8926 (Geneve).</li>
+    <li>OpenStack Neutron ML2/OVN driver documentation.</li>
+  </ul>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab5"><span class="lbl">Previous</span><span class="ttl">Lab 5 &mdash; OVN basics</span></a>
+    <a class="next" data-go="overview"><span class="lbl">Back to</span><span class="ttl">Overview</span></a>
+  </nav>
+</section>
+
+</main>
+</div>
+
+<footer class="site">OpenStack Networking Workshop · Single-file edition · &copy;&nbsp;2026</footer>
+
+<script>
+/* ============================================================
+   Navigation: switch sections, update sidebar highlight
+   ============================================================ */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id===id));
+  document.querySelectorAll('header.site nav a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('aside.side a').forEach(a => a.classList.remove('cur'));
+  // Map labN/getting-started/lab-env to top-nav highlight
+  const topMap = {overview:'overview','getting-started':'getting-started','lab-env':'lab-env',reference:'reference',lab1:'overview',lab2:'overview',lab3:'overview',lab4:'overview',lab5:'overview'};
+  const topId = topMap[id] || id;
+  const topLink = document.querySelector(`header.site nav a[data-go="${topId}"]`);
+  if(topLink) topLink.classList.add('active');
+  document.querySelectorAll(`aside.side a[data-go="${id}"]`).forEach(a => a.classList.add('cur'));
+  window.scrollTo({top:0,behavior:'instant'});
+  // Boot any lab-env on the new page
+  document.querySelectorAll(`#${id} .labenv`).forEach(boot);
+}
+document.body.addEventListener('click', e => {
+  const t = e.target.closest('[data-go]');
+  if(!t) return;
+  e.preventDefault();
+  showPage(t.dataset.go);
+});
+
+/* ============================================================
+   Mock terminal (LabShell) — a compact simulator
+   Supports: ip netns/link/addr/route/neigh/tuntap, ovs-vsctl,
+   ovs-ofctl, ovs-appctl, ovn-nbctl, ovn-sbctl, ping, tcpdump,
+   apt, systemctl, help, state, clear, reset
+   ============================================================ */
+class LabShell{
+  constructor(host, scenario){
+    this.host = host;
+    this.scenario = scenario || 'fresh';
+    this.history = [];
+    this.histIdx = -1;
+    this.reset();
+    this.render();
+    this.applyScenario(this.scenario);
+  }
+  reset(){
+    this.ns = {root:{links:{lo:{up:true,addrs:[]}},routes:[],neigh:{}}};
+    this.taps = {};
+    this.veths = {}; // name -> {ns,peer,up,addrs,mac}
+    this.ovs = {bridges:{},installed:false};
+    this.ovn = {nb:{ls:{},lr:{}},sb:{chassis:null,bindings:{}},installed:false};
+    this.macCounter = 1;
+  }
+  newMac(){
+    const n = this.macCounter++;
+    return `52:54:00:${(n>>16&0xff).toString(16).padStart(2,'0')}:${(n>>8&0xff).toString(16).padStart(2,'0')}:${(n&0xff).toString(16).padStart(2,'0')}`;
+  }
+  render(){
+    this.host.innerHTML = `
+      <div class="bar"><span class="dot"></span><span class="t">${this.host.dataset.title||'Mock terminal'}</span>
+        <button data-act="reset">Reset</button>
+        <button data-act="clear">Clear</button></div>
+      <div class="out"></div>
+      <div class="in"><span class="ps">root@lab:~#</span><input autocomplete="off" spellcheck="false" autofocus></div>
+      <div class="hint">Type <b>help</b> for commands, <b>state</b> to dump topology.</div>
+    `;
+    this.out = this.host.querySelector('.out');
+    this.input = this.host.querySelector('.in input');
+    this.host.querySelectorAll('button[data-act]').forEach(b => {
+      b.onclick = () => {
+        if(b.dataset.act==='clear') this.out.innerHTML = '';
+        else { this.reset(); this.out.innerHTML=''; this.applyScenario(this.scenario); }
+      };
+    });
+    this.input.addEventListener('keydown', e => {
+      if(e.key==='Enter'){
+        const cmd = this.input.value;
+        this.input.value = '';
+        this.history.push(cmd);
+        this.histIdx = this.history.length;
+        this.runLine(cmd);
+      } else if(e.key==='ArrowUp'){
+        if(this.histIdx>0){ this.histIdx--; this.input.value = this.history[this.histIdx] || ''; }
+        e.preventDefault();
+      } else if(e.key==='ArrowDown'){
+        if(this.histIdx<this.history.length){ this.histIdx++; this.input.value = this.history[this.histIdx] || ''; }
+        e.preventDefault();
+      }
+    });
+    this.host.addEventListener('click', () => this.input.focus());
+  }
+  print(text, cls){
+    const d = document.createElement('div');
+    if(cls) d.className = cls;
+    d.textContent = text;
+    this.out.appendChild(d);
+    this.out.scrollTop = this.out.scrollHeight;
+  }
+  runLine(line){
+    if(line.trim()==='') return;
+    this.print(`root@lab:~# ${line}`, 'cmd');
+    // strip leading sudo
+    let cmd = line.trim().replace(/^sudo\s+/,'');
+    // semicolons → multiple commands
+    cmd.split(/\s*;\s*/).filter(Boolean).forEach(c => this.execOne(c));
+  }
+  execOne(line){
+    const parts = line.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+    const stripQ = s => s.replace(/^["']|["']$/g,'');
+    const args = parts.map(stripQ);
+    const c0 = args[0];
+    try {
+      if(c0==='help') return this.cmdHelp();
+      if(c0==='state') return this.cmdState();
+      if(c0==='clear') { this.out.innerHTML=''; return; }
+      if(c0==='apt') return this.cmdApt(args);
+      if(c0==='systemctl') return this.cmdSystemctl(args);
+      if(c0==='ip') return this.cmdIp(args, 'root');
+      if(c0==='ovs-vsctl') return this.cmdOvsVsctl(args);
+      if(c0==='ovs-ofctl') return this.cmdOvsOfctl(args);
+      if(c0==='ovs-appctl') return this.cmdOvsAppctl(args);
+      if(c0==='ovs-dpctl') return this.cmdOvsDpctl(args);
+      if(c0==='ovn-nbctl') return this.cmdOvnNbctl(args);
+      if(c0==='ovn-sbctl') return this.cmdOvnSbctl(args);
+      if(c0==='ping') return this.cmdPing(args, 'root');
+      if(c0==='tcpdump') return this.cmdTcpdump(args, 'root');
+      if(c0==='echo') { this.print(args.slice(1).join(' ')); return; }
+      this.print(`${c0}: command not found`, 'err');
+    } catch(e){ this.print(`error: ${e.message}`, 'err'); }
+  }
+  cmdHelp(){
+    this.print(`Supported commands:
+  ip netns [add|del|list|exec]   Manage network namespaces
+  ip link [add|set|show]         Manage interfaces (veth, up/down, netns)
+  ip addr [add|show]             IP addresses
+  ip route [add|show]            Routes
+  ip neigh show                  ARP cache
+  ip tuntap add ...              Create TAP devices
+  ovs-vsctl ...                  Manage OVS bridges, ports, configuration
+  ovs-ofctl ...                  Manage OpenFlow rules
+  ovs-appctl fdb/show <br>       Show MAC learning table
+  ovn-nbctl ...                  OVN northbound DB (intent)
+  ovn-sbctl ...                  OVN southbound DB (state)
+  ping <ip>                      ICMP echo
+  tcpdump -i <dev>               Capture (mock summary)
+  apt install ...                Install OVS / OVN (mock)
+  systemctl status <svc>         Service status
+  help / state / clear / reset`);
+  }
+  cmdState(){
+    const lines = [];
+    lines.push('# Namespaces:'); lines.push('  ' + Object.keys(this.ns).join(', '));
+    lines.push('# Veth pairs:');
+    const seen = new Set();
+    for(const [name, v] of Object.entries(this.veths)){
+      if(seen.has(name)) continue;
+      seen.add(name); seen.add(v.peer);
+      lines.push(`  ${name}(${this.veths[name].ns}) <-> ${v.peer}(${this.veths[v.peer]?.ns})`);
+    }
+    lines.push('# OVS bridges:');
+    for(const [b, br] of Object.entries(this.ovs.bridges))
+      lines.push(`  ${b}: ports=[${Object.keys(br.ports).join(', ')}], flows=${br.flows.length}`);
+    if(this.ovn.installed){
+      lines.push('# OVN logical switches:');
+      for(const [n, ls] of Object.entries(this.ovn.nb.ls))
+        lines.push(`  ${n}: ports=[${Object.keys(ls.ports).join(', ')}]`);
+      lines.push('# OVN logical routers:');
+      for(const [n, lr] of Object.entries(this.ovn.nb.lr))
+        lines.push(`  ${n}: ports=[${Object.keys(lr.ports).join(', ')}]`);
+    }
+    this.print(lines.join('\n'));
+  }
+  cmdApt(a){
+    if(a[1]==='install'){
+      const pkgs = a.slice(2).filter(x => !x.startsWith('-'));
+      if(pkgs.includes('openvswitch-switch')) this.ovs.installed = true;
+      if(pkgs.includes('ovn-central') || pkgs.includes('ovn-host')){ this.ovn.installed = true; this.ovs.installed = true; }
+      this.print(`Reading package lists... Done\nSetting up ${pkgs.join(', ')} ... Done`);
+    } else if(a[1]==='update'){
+      this.print('Hit:1 archive.ubuntu.com noble InRelease\nReading package lists... Done');
+    } else this.print(`apt: unknown subcommand ${a[1]}`, 'err');
+  }
+  cmdSystemctl(a){
+    if(a[1]==='status'){
+      const svc = a[2] || '';
+      if(svc.startsWith('openvswitch') && this.ovs.installed){
+        this.print(`● openvswitch-switch.service - Open vSwitch\n   Active: active (exited)`);
+      } else if(svc.startsWith('ovn') && this.ovn.installed){
+        this.print(`● ${svc} - OVN service\n   Active: active (running)`);
+      } else this.print(`Unit ${svc} could not be found.`, 'err');
+    }
+  }
+  /* ----- ip ----- */
+  cmdIp(a, currentNs){
+    const sub = a[1];
+    if(sub==='netns') return this.ipNetns(a, currentNs);
+    if(sub==='link') return this.ipLink(a, currentNs);
+    if(sub==='addr') return this.ipAddr(a, currentNs);
+    if(sub==='route') return this.ipRoute(a, currentNs);
+    if(sub==='neigh') return this.ipNeigh(a, currentNs);
+    if(sub==='tuntap') return this.ipTuntap(a, currentNs);
+    if(sub==='-s' && a[2]==='link') return this.ipLink(['ip','link','show', a[4]||''].filter(Boolean), currentNs);
+    this.print(`ip: unknown subcommand ${sub}`, 'err');
+  }
+  ipNetns(a, cur){
+    const op = a[2];
+    if(op==='add'){
+      const n = a[3];
+      if(this.ns[n]) return this.print(`Cannot create namespace "${n}": File exists`, 'err');
+      this.ns[n] = {links:{lo:{up:false,addrs:[]}},routes:[],neigh:{}};
+    } else if(op==='del'){
+      const n = a[3];
+      if(!this.ns[n]) return this.print(`Cannot remove namespace file "${n}": No such file`, 'err');
+      // veth ends inside this ns vanish
+      for(const v of Object.keys(this.veths)){
+        if(this.veths[v].ns===n){ delete this.veths[v]; }
+      }
+      delete this.ns[n];
+    } else if(op==='list' || !op){
+      Object.keys(this.ns).filter(x=>x!=='root').forEach(n => this.print(n));
+    } else if(op==='exec'){
+      const target = a[3];
+      if(!this.ns[target]) return this.print(`setting the network namespace "${target}" failed: No such file`, 'err');
+      // re-run the rest within that namespace
+      const rest = a.slice(4);
+      const sub = rest[0];
+      if(sub==='ip') return this.cmdIp(rest, target);
+      if(sub==='ping') return this.cmdPing(rest, target);
+      if(sub==='tcpdump') return this.cmdTcpdump(rest, target);
+      if(sub==='dhclient'){ this.print(`Listening on veth-${target.slice(-1)}\nDHCPDISCOVER on veth-... \nDHCPOFFER from 10.0.1.1\nDHCPACK from 10.0.1.1\nbound to 10.0.1.${target==='ns-a'?10:20} -- renewal in 1800 seconds.`); return; }
+      this.print(`exec: unsupported command ${sub}`, 'err');
+    }
+  }
+  ipLink(a, cur){
+    const op = a[2];
+    if(op==='add'){
+      // ip link add <name> type veth peer name <peer>
+      const name = a[3];
+      const typeIdx = a.indexOf('type');
+      if(typeIdx>0 && a[typeIdx+1]==='veth'){
+        const peer = a[a.indexOf('name', typeIdx+2)+1];
+        const mac1=this.newMac(), mac2=this.newMac();
+        this.veths[name] = {ns:cur,peer:peer,up:false,addrs:[],mac:mac1};
+        this.veths[peer] = {ns:cur,peer:name,up:false,addrs:[],mac:mac2};
+        this.ns[cur].links[name] = this.veths[name];
+        this.ns[cur].links[peer] = this.veths[peer];
+      }
+    } else if(op==='set'){
+      const dev = a[3];
+      if(a[4]==='netns'){
+        const target = a[5];
+        if(!this.ns[target]) return this.print(`Cannot find network namespace "${target}"`, 'err');
+        if(this.veths[dev]){
+          delete this.ns[this.veths[dev].ns].links[dev];
+          this.veths[dev].ns = target;
+          this.ns[target].links[dev] = this.veths[dev];
+        } else this.print(`Cannot find device "${dev}"`, 'err');
+      } else if(a[4]==='up' || a[4]==='down'){
+        const upState = a[4]==='up';
+        const link = this.ns[cur].links[dev];
+        if(!link) return this.print(`Cannot find device "${dev}"`, 'err');
+        link.up = upState;
+      }
+    } else if(op==='del'){
+      const dev = a[3];
+      if(this.taps[dev]){ delete this.taps[dev]; delete this.ns[cur].links[dev]; }
+      else if(this.veths[dev]){
+        const peer = this.veths[dev].peer;
+        delete this.ns[this.veths[dev].ns].links[dev];
+        if(this.veths[peer]){ delete this.ns[this.veths[peer].ns].links[peer]; delete this.veths[peer]; }
+        delete this.veths[dev];
+      } else this.print(`Cannot find device "${dev}"`, 'err');
+    } else if(op==='show' || !op){
+      const dev = a[3];
+      const links = this.ns[cur].links;
+      const show = (n, l) => {
+        const state = l.up ? 'UP' : 'DOWN';
+        const mac = l.mac || '00:00:00:00:00:00';
+        this.print(`${n}: <BROADCAST,MULTICAST,${state}> mtu 1500 state ${state}\n    link/ether ${mac} brd ff:ff:ff:ff:ff:ff`);
+      };
+      if(dev){ if(links[dev]) show(dev, links[dev]); else this.print(`Device "${dev}" does not exist.`, 'err'); }
+      else Object.entries(links).forEach(([n,l])=>show(n,l));
+    }
+  }
+  ipAddr(a, cur){
+    const op = a[2];
+    if(op==='add'){
+      const cidr = a[3]; const dev = a[5];
+      const l = this.ns[cur].links[dev];
+      if(!l) return this.print(`Cannot find device "${dev}"`, 'err');
+      l.addrs.push(cidr);
+    } else if(op==='show' || !op){
+      const dev = a[3];
+      const links = this.ns[cur].links;
+      const show = (n,l) => {
+        this.print(`${n}: <UP,LOWER_UP> state ${l.up?'UP':'DOWN'}`);
+        (l.addrs||[]).forEach(c => this.print(`    inet ${c} scope global ${n}`));
+      };
+      if(dev){ if(links[dev]) show(dev, links[dev]); }
+      else Object.entries(links).forEach(([n,l])=>show(n,l));
+    }
+  }
+  ipRoute(a, cur){
+    const op = a[2];
+    if(op==='add'){
+      // ip route add default via <gw>
+      const dest = a[3];
+      const viaIdx = a.indexOf('via');
+      const gw = viaIdx>0 ? a[viaIdx+1] : '?';
+      this.ns[cur].routes.push({dest, gw});
+    } else if(op==='show' || !op){
+      this.ns[cur].routes.forEach(r => this.print(`${r.dest} via ${r.gw}`));
+    }
+  }
+  ipNeigh(a, cur){
+    Object.entries(this.ns[cur].neigh).forEach(([ip,mac]) => this.print(`${ip} lladdr ${mac} REACHABLE`));
+  }
+  ipTuntap(a, cur){
+    if(a[2]==='add'){
+      const devIdx = a.indexOf('dev');
+      const dev = a[devIdx+1];
+      this.taps[dev] = {up:false, mac:this.newMac()};
+      this.ns[cur].links[dev] = {up:false, addrs:[], mac:this.taps[dev].mac};
+    }
+  }
+  /* ----- OVS ----- */
+  cmdOvsVsctl(a){
+    if(!this.ovs.installed) return this.print('ovs-vsctl: cannot connect to "unix:/var/run/openvswitch/db.sock" (No such file). Did you install openvswitch-switch?', 'err');
+    const op = a[1];
+    if(op==='show'){
+      const br = Object.keys(this.ovs.bridges);
+      this.print(`d6f2a3...\n    ovs_version: "3.3.0"`);
+      br.forEach(b => {
+        const ports = Object.keys(this.ovs.bridges[b].ports);
+        this.print(`    Bridge ${b}`);
+        ports.forEach(p => {
+          this.print(`        Port "${p}"\n            Interface "${p}"`);
+          const ifid = this.ovs.bridges[b].ports[p].ifaceId;
+          if(ifid) this.print(`                external_ids: {iface-id="${ifid}"}`);
+        });
+      });
+    } else if(op==='add-br'){
+      const name = a[2];
+      this.ovs.bridges[name] = {ports:{}, flows:[{priority:0, match:'', action:'NORMAL', n_packets:0}], fdb:{}};
+      this.ns.root.links[name] = {up:true, addrs:[], mac:this.newMac()};
+    } else if(op==='del-br'){
+      delete this.ovs.bridges[a[2]];
+      delete this.ns.root.links[a[2]];
+    } else if(op==='add-port'){
+      const br = a[2], port = a[3];
+      if(!this.ovs.bridges[br]) return this.print(`no bridge named ${br}`, 'err');
+      const ofport = Object.keys(this.ovs.bridges[br].ports).length+1;
+      this.ovs.bridges[br].ports[port] = {ofport, ifaceId:null};
+    } else if(op==='del-port'){
+      const br = a[2], port = a[3];
+      delete this.ovs.bridges[br].ports[port];
+    } else if(op==='list-br'){
+      Object.keys(this.ovs.bridges).forEach(b => this.print(b));
+    } else if(op==='list-ports'){
+      const br = a[2];
+      Object.keys(this.ovs.bridges[br]?.ports||{}).forEach(p => this.print(p));
+    } else if(op==='set'){
+      // ovs-vsctl set interface <dev> external-ids:iface-id=<id>
+      // ovs-vsctl set open . external-ids:ovn-encap-type=geneve ...
+      if(a[2]==='interface'){
+        const dev = a[3];
+        for(let i=4; i<a.length; i++){
+          const m = a[i].match(/external-ids:iface-id=(\S+)/);
+          if(m){
+            for(const br of Object.values(this.ovs.bridges)){
+              if(br.ports[dev]){ br.ports[dev].ifaceId = m[1]; }
+            }
+            // mark binding in OVN SB
+            this.ovn.sb.bindings[m[1]] = {chassis:'chassis-local', iface:dev};
+          }
+        }
+      } else if(a[2]==='open' && a[3]==='.'){
+        for(let i=4; i<a.length; i++){
+          if(a[i].includes('ovn-encap-type=geneve')) this.ovn.sb.chassis = {name:'chassis-local', encap:'geneve'};
+        }
+      }
+    } else if(op==='get'){
+      // ovs-vsctl get Interface <dev> ofport
+      if(a[2]==='Interface' && a[4]==='ofport'){
+        for(const br of Object.values(this.ovs.bridges))
+          if(br.ports[a[3]]) return this.print(String(br.ports[a[3]].ofport));
+        this.print('-1');
+      }
+    } else this.print(`ovs-vsctl: unknown command ${op}`, 'err');
+  }
+  cmdOvsOfctl(a){
+    if(!this.ovs.installed) return this.print('ovs-ofctl: not installed', 'err');
+    const op = a[1], br = a[2];
+    const bridge = this.ovs.bridges[br];
+    if(!bridge && (op==='dump-flows'||op==='dump-ports'||op==='show'||op==='add-flow'||op==='del-flows'))
+      return this.print(`ovs-ofctl: ${br}: no such bridge`, 'err');
+    if(op==='show'){
+      this.print(`OFPT_FEATURES_REPLY (xid=0x2): dpid:00000000${this.newMac().replace(/:/g,'').slice(0,12)}`);
+      Object.entries(bridge.ports).forEach(([p,info]) => this.print(`  ${info.ofport}(${p}): addr:${this.newMac()}`));
+    } else if(op==='dump-flows'){
+      bridge.flows.forEach(f => {
+        this.print(` cookie=0x0, duration=10s, n_packets=${f.n_packets}, n_bytes=${f.n_packets*64}, priority=${f.priority}${f.match?','+f.match:''} actions=${f.action}`);
+      });
+    } else if(op==='dump-ports'){
+      Object.entries(bridge.ports).forEach(([p,info]) => {
+        this.print(`  port  ${info.ofport}: rx pkts=${Math.floor(Math.random()*200)} bytes=${Math.floor(Math.random()*20000)}`);
+      });
+    } else if(op==='add-flow'){
+      // expect "priority=N,match,actions=X"
+      const spec = a.slice(3).join(' ');
+      const m = spec.match(/priority=(\d+),([^]*?)actions=([^]+)$/);
+      if(m){
+        const flow = {priority:parseInt(m[1]), match:m[2].replace(/,$/,'').trim(), action:m[3].trim(), n_packets:0};
+        bridge.flows.push(flow);
+        bridge.flows.sort((a,b)=>b.priority-a.priority);
+      } else this.print('ovs-ofctl: bad flow spec', 'err');
+    } else if(op==='del-flows'){
+      const match = a.slice(3).join(' ').replace(/^"|"$/g,'').trim();
+      const before = bridge.flows.length;
+      bridge.flows = bridge.flows.filter(f => f.match.indexOf(match)===-1 || f.priority===0);
+      // also remove zero-priority NORMAL? no, keep default
+    }
+  }
+  cmdOvsAppctl(a){
+    if(a[1]==='fdb/show'){
+      const br = a[2]; const bridge = this.ovs.bridges[br];
+      if(!bridge) return;
+      this.print(' port  VLAN  MAC                Age');
+      Object.entries(bridge.ports).slice(0,4).forEach(([p,info]) => {
+        this.print(`  ${info.ofport}     0   ${this.newMac()}   10`);
+      });
+    } else if(a[1]==='ofproto/trace'){
+      this.print(`Flow: in_port=${a[3]||1},ip,nw_src=10.0.1.10,nw_dst=10.0.1.20\n\nbridge("br-int")\n  0. priority 0, NORMAL\n     -> output to learned port\n\nFinal flow: unchanged\nMegaflow: ...\nDatapath actions: 2`);
+    }
+  }
+  cmdOvsDpctl(a){
+    if(a[1]==='dump-flows') this.print(`recirc_id(0),in_port(2),eth_type(0x0800), packets:3, bytes:294, used:0.2s, actions:3`);
+  }
+  /* ----- OVN ----- */
+  cmdOvnNbctl(a){
+    if(!this.ovn.installed) return this.print('ovn-nbctl: not installed', 'err');
+    const op = a[1];
+    if(op==='show'){
+      Object.entries(this.ovn.nb.ls).forEach(([n,ls]) => {
+        this.print(`switch ${n}`);
+        Object.entries(ls.ports).forEach(([p,info]) => this.print(`    port ${p}\n        addresses: ["${info.addrs||''}"]`));
+      });
+      Object.entries(this.ovn.nb.lr).forEach(([n,lr]) => {
+        this.print(`router ${n}`);
+        Object.entries(lr.ports).forEach(([p,info]) => this.print(`    port ${p} mac="${info.mac}" networks=["${info.cidr}"]`));
+      });
+    }
+    else if(op==='ls-add'){ this.ovn.nb.ls[a[2]] = {ports:{}, acls:[]}; }
+    else if(op==='ls-del'){ delete this.ovn.nb.ls[a[2]]; }
+    else if(op==='lsp-add'){ const sw=a[2],p=a[3]; if(this.ovn.nb.ls[sw]) this.ovn.nb.ls[sw].ports[p]={}; }
+    else if(op==='lsp-set-addresses'){ const p=a[2]; for(const ls of Object.values(this.ovn.nb.ls)){ if(ls.ports[p]) ls.ports[p].addrs=a.slice(3).join(' ').replace(/^"|"$/g,''); } }
+    else if(op==='lsp-set-type'||op==='lsp-set-options'||op==='lsp-set-port-security'||op==='lsp-set-dhcpv4-options'){ /* accept silently */ }
+    else if(op==='lr-add'){ this.ovn.nb.lr[a[2]] = {ports:{}}; }
+    else if(op==='lrp-add'){ const lr=a[2],p=a[3],mac=a[4],cidr=a[5]; if(this.ovn.nb.lr[lr]) this.ovn.nb.lr[lr].ports[p]={mac,cidr}; }
+    else if(op==='acl-add'){ const sw=a[2]; if(this.ovn.nb.ls[sw]) this.ovn.nb.ls[sw].acls.push({dir:a[3],prio:a[4],match:a[5],action:a[6]}); }
+    else if(op==='create'){ this.print('dhcp-options-uuid-1234'); }
+    else this.print(`ovn-nbctl: unknown command ${op}`, 'err');
+  }
+  cmdOvnSbctl(a){
+    if(!this.ovn.installed) return this.print('ovn-sbctl: not installed', 'err');
+    const op = a[1];
+    if(op==='show'){
+      if(this.ovn.sb.chassis) this.print(`Chassis "chassis-local"\n    hostname: lab\n    Encap geneve\n        ip: "127.0.0.1"`);
+      Object.entries(this.ovn.sb.bindings).forEach(([lp,b]) => this.print(`        Port_Binding ${lp}`));
+    } else if(op==='lflow-list'){
+      this.print(`Datapath: "${a[2]||'ls1'}"\n  table=0 (ls_in_port_sec_l2), priority=100, match=(inport == "ls1-port1"), action=(next;)\n  table=1 (ls_in_port_sec_ip),  priority=0, action=(next;)\n  table=14(ls_in_arp_rsp),      priority=50, match=(arp.tpa==10.0.1.20), action=(eth.dst=eth.src; eth.src=aa:bb:cc:00:00:02; ...)`);
+    }
+  }
+  /* ----- ping & tcpdump ----- */
+  cmdPing(a, cur){
+    // ping [-c N] <ip>
+    let target = a[a.length-1];
+    let count = 4;
+    const ci = a.indexOf('-c');
+    if(ci>0) count = parseInt(a[ci+1]);
+    const reachable = this.reachable(cur, target);
+    this.print(`PING ${target} 56 data bytes`);
+    if(reachable){
+      for(let i=0;i<count;i++) this.print(`64 bytes from ${target}: icmp_seq=${i+1} ttl=64 time=0.0${Math.floor(Math.random()*9)} ms`);
+      this.print(`--- ${target} ping statistics ---\n${count} packets transmitted, ${count} received, 0% packet loss`);
+    } else {
+      this.print(`--- ${target} ping statistics ---\n${count} packets transmitted, 0 received, 100% packet loss`);
+    }
+  }
+  reachable(fromNs, targetIp){
+    // Find which namespace has this IP
+    const targetNs = Object.entries(this.ns).find(([n,nsd]) =>
+      Object.values(nsd.links).some(l => (l.addrs||[]).some(a => a.split('/')[0]===targetIp))
+    );
+    if(!targetNs) return false;
+    if(fromNs===targetNs[0]) return true;
+    // Same OVS bridge? walk veth ends
+    const inSameBridge = (a, b) => {
+      for(const br of Object.values(this.ovs.bridges)){
+        const ports = Object.keys(br.ports);
+        const aSide = Object.entries(this.veths).find(([n,v]) => v.ns===a && ports.includes(v.peer));
+        const bSide = Object.entries(this.veths).find(([n,v]) => v.ns===b && ports.includes(v.peer));
+        if(aSide && bSide){
+          // Check ACL drops for IPs
+          const fromIp = (this.ns[a].links[aSide[0]].addrs[0]||'').split('/')[0];
+          for(const f of br.flows){
+            if(f.action==='drop' && f.match.includes(`nw_src=${fromIp}`) && f.match.includes(`nw_dst=${targetIp}`)) return false;
+          }
+          return true;
+        }
+      }
+      return false;
+    };
+    return inSameBridge(fromNs, targetNs[0]);
+  }
+  cmdTcpdump(a, cur){
+    // tcpdump -i <dev> [filter]
+    const i = a.indexOf('-i');
+    const dev = i>0 ? a[i+1] : '?';
+    this.print(`tcpdump: listening on ${dev}, link-type EN10MB`);
+    this.print(`12:00:00.000 ARP, Request who-has 192.168.100.20 tell 192.168.100.10`);
+    this.print(`12:00:00.001 ARP, Reply 192.168.100.20 is-at aa:bb:cc:00:00:02`);
+    this.print(`12:00:00.002 IP 192.168.100.10 > 192.168.100.20: ICMP echo request, id 1, seq 1`);
+    this.print(`12:00:00.003 IP 192.168.100.20 > 192.168.100.10: ICMP echo reply,  id 1, seq 1`);
+    this.print(`4 packets captured`);
+  }
+  /* ----- Scenario seeding ----- */
+  applyScenario(s){
+    if(s==='fresh') { this.print('Mock lab — fresh state. Type help to begin.', 'info'); return; }
+    // Build cumulative state silently.
+    const log = m => this.print(`[scenario] ${m}`, 'info');
+    log(`Seeding state for ${s}...`);
+    // lab1 leaves: ns-a, ns-b (no veths)
+    if(s==='lab1'||s==='lab2'||s==='lab3'||s==='lab4'||s==='lab5'){
+      this.ns['ns-a']={links:{lo:{up:true,addrs:[]}},routes:[],neigh:{}};
+      this.ns['ns-b']={links:{lo:{up:true,addrs:[]}},routes:[],neigh:{}};
+    }
+    // lab2 leaves: ns-a+ns-b with veth pair and IPs
+    if(s==='lab2'){
+      const m1=this.newMac(),m2=this.newMac();
+      this.veths['veth-a']={ns:'ns-a',peer:'veth-b',up:true,addrs:['10.0.0.1/24'],mac:m1};
+      this.veths['veth-b']={ns:'ns-b',peer:'veth-a',up:true,addrs:['10.0.0.2/24'],mac:m2};
+      this.ns['ns-a'].links['veth-a']=this.veths['veth-a'];
+      this.ns['ns-b'].links['veth-b']=this.veths['veth-b'];
+    }
+    // lab3/4/5 leaves: ns-a/b/c via br-int
+    if(s==='lab3'||s==='lab4'||s==='lab5'){
+      this.ns['ns-c']={links:{lo:{up:true,addrs:[]}},routes:[],neigh:{}};
+      this.ovs.installed = true;
+      this.ovs.bridges['br-int'] = {ports:{}, flows:[{priority:0,match:'',action:'NORMAL',n_packets:0}], fdb:{}};
+      this.ns.root.links['br-int']={up:true,addrs:[],mac:this.newMac()};
+      const setup = (nsName, ip, ofport) => {
+        const veth=`veth-${nsName.slice(-1)}`, peer=`${veth}-ovs`;
+        const m1=this.newMac(),m2=this.newMac();
+        this.veths[veth]={ns:nsName,peer,up:true,addrs:[ip],mac:m1};
+        this.veths[peer]={ns:'root',peer:veth,up:true,addrs:[],mac:m2};
+        this.ns[nsName].links[veth]=this.veths[veth];
+        this.ns.root.links[peer]=this.veths[peer];
+        this.ovs.bridges['br-int'].ports[peer]={ofport,ifaceId:null};
+      };
+      setup('ns-a','192.168.100.10/24',1);
+      setup('ns-b','192.168.100.20/24',2);
+      setup('ns-c','192.168.100.30/24',3);
+    }
+    // lab5 also has OVN installed
+    if(s==='lab5'){ this.ovn.installed = true; }
+    log('Ready. Try: ovs-vsctl show');
+  }
+}
+
+function boot(host){
+  if(host.dataset.booted) return;
+  host.dataset.booted = '1';
+  new LabShell(host, host.dataset.scenario);
+}
+document.querySelectorAll('.labenv').forEach(boot);
+
+// Initial route from hash
+if(location.hash){
+  const id = location.hash.slice(1);
+  if(document.getElementById(id)) showPage(id);
+}
+</script>
+</body>
+</html>
