@@ -24,7 +24,7 @@ By the end of this lab you will be able to:
 
 ### 2.1 TAP / TUN Devices
 
-In Linux the kernel provides two types of virtual network devices that
+In Linux, the kernel provides two types of virtual network devices that
 user-space programs can read/write directly:
 
 | Device | Layer | Typical use |
@@ -87,7 +87,7 @@ namespace so that overlapping IP ranges from different tenants never conflict.
 
 In a real OpenStack deployment:
 
-1. A **namespace** is created for every[1] Neutron router and DHCP agent.
+1. A **namespace** is created for every [1] Neutron router and DHCP agent.
 2. A **TAP device** is created for every VM port.
 3. The TAP device is plugged into a bridge (Linux bridge or OVS).
 4. A **veth pair** (Lab 2) connects the namespace to the bridge.
@@ -95,7 +95,7 @@ In a real OpenStack deployment:
 In this lab we focus on steps 1 and 2 — namespaces and TAP devices — to
 understand the building blocks before wiring them together.
 
-> **[1]Note: This is true for some networking configurations (l3ha, dvr, etc.)
+> **[1] Note:** This is true for some networking configurations (l3ha, dvr, etc.)
 > OVN uses a more advanced approach.
 
 ---
@@ -227,4 +227,3 @@ will also provide the **solution** for this lab's exercises.
 ---
 
 *Lab 1 of 5 — OpenStack Networking Workshop*
-
