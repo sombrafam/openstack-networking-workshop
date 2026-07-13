@@ -1,0 +1,13 @@
+[Unit]
+Description=OVN Lab endpoint wiring (node1)
+After=network-online.target openvswitch-switch.service ovn-controller.service
+Wants=network-online.target
+Requires=openvswitch-switch.service ovn-controller.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ovn-lab-endpoints-node1.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
