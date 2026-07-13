@@ -4,7 +4,6 @@
 |---|---|
 | Tier | 3 - OVN |
 | Duration | ~1 hour |
-| Prerequisites | Labs 1-6 completed |
 | Goal | Stretch the same OVN logical networks across two hosts and validate cross-host L2 and L3 connectivity |
 
 ---
@@ -174,9 +173,11 @@ Verify:
 On `node1`:
 
 ```bash
-ovn-nbctl show
-ovn-sbctl show
+sudo ovn-nbctl show
+sudo ovn-sbctl show
 ```
+
+Both tables will be empty for now.
 
 ---
 
@@ -214,8 +215,8 @@ sudo ovs-vsctl set open . \
 Verify from `node1`:
 
 ```bash
-ovn-sbctl show
-ovn-sbctl list Chassis
+sudo ovn-sbctl show
+sudo ovn-sbctl list Chassis
 ```
 
 Expected: two chassis are visible, each with a Geneve encapsulation entry and the correct management IP.
@@ -231,19 +232,19 @@ This ordering matters because OVN is intent-driven. You first declare what the n
 Run on `node1`:
 
 ```bash
-ovn-nbctl ls-add ls1
+sudo ovn-nbctl ls-add ls1
 
-ovn-nbctl lsp-add ls1 ls1-port1
-ovn-nbctl lsp-set-addresses ls1-port1 "aa:bb:cc:00:00:01 10.0.1.10"
+sudo ovn-nbctl lsp-add ls1 ls1-port1
+sudo ovn-nbctl lsp-set-addresses ls1-port1 "aa:bb:cc:00:00:01 10.0.1.10"
 
-ovn-nbctl lsp-add ls1 ls1-port2
-ovn-nbctl lsp-set-addresses ls1-port2 "aa:bb:cc:00:00:02 10.0.1.20"
+sudo ovn-nbctl lsp-add ls1 ls1-port2
+sudo ovn-nbctl lsp-set-addresses ls1-port2 "aa:bb:cc:00:00:02 10.0.1.20"
 ```
 
 Verify:
 
 ```bash
-ovn-nbctl show
+sudo ovn-nbctl show
 ```
 
 ---
@@ -349,13 +350,15 @@ Why this must match:
 Verify from `node1`:
 
 ```bash
-ovn-sbctl show
+sudo ovn-sbctl show
 sudo ip netns exec ns-a ping -c 3 10.0.1.20
 ```
 
 Expected: the ping succeeds even though the two namespaces are on different hosts. That traffic traverses the Geneve tunnel between `node1` and `node2`.
 
 ### 4.5 Persist namespace and veth endpoint wiring across reboots
+
+This section is optional.
 
 Linux namespaces, veth pairs, and in-namespace IP configuration are runtime objects, so they are not retained after reboot by default. This step installs boot-time scripts and systemd units so each node recreates its local endpoints automatically.
 
@@ -418,11 +421,15 @@ The goal is to connect the logical picture to the real overlay. Logical traces e
 On `node1`, inspect logical and physical rules:
 
 ```bash
-ovn-sbctl lflow-list ls1
+sudo ovn-sbctl lflow-list ls1
 sudo ovs-ofctl dump-flows br-int | head -40
 ```
 
-On `node1`, capture a real packet from `ns-a` and trace it through OVS:
+The `ovn-sbctl lflow-list` command displays the logical flows that OVN has compiled for the logical switch. These are high-level forwarding rules that express OVN's intent (MAC learning, L2 switching, port security, etc.) independent of how they're implemented on any particular chassis.
+
+The `ovs-ofctl dump-flows` command shows the OpenFlow rules currently installed on the local OVS bridge. These are the low-level, hardware-optimized rules that the local chassis actually executes, translated from the logical flows into concrete forwarding decisions using OpenFlow match-action semantics.
+
+On `node1`, capture a real packet from `ns-a` and trace it through OVS. The command will hang waiting for the traffic is generated:
 
 ```bash
 ns_a_mac=$(sudo ip netns exec ns-a ip link show veth-a | awk '/ether/{print $2}')
@@ -443,12 +450,16 @@ in_port=$(sudo ovs-vsctl get Interface veth-a-ovs ofport)
 sudo ovs-appctl ofproto/trace br-int in_port=${in_port} ${flow}
 ```
 
+The `ovs-appctl ofproto/trace` command simulates the execution of a packet through the OpenFlow pipeline on the specified bridge, showing which rules match, in what order they are applied, and the final actions taken (such as forwarding to a port or encapsulation with Geneve). It traces the packet without actually injecting it, providing a detailed walkthrough of how OVS would process that exact flow based on the current OpenFlow table entries.
+
 Run a logical trace from `node1`:
 
 ```bash
-ovn-trace --minimal ls1 \
+sudo ovn-trace --minimal ls1 \
   'inport=="ls1-port1" && eth.src==aa:bb:cc:00:00:01 && eth.dst==aa:bb:cc:00:00:02 && ip4.src==10.0.1.10 && ip4.dst==10.0.1.20 && ip.ttl==64 && icmp4'
 ```
+
+The `ovn-trace` command performs a logical-level simulation of how OVN's control plane would route a packet through the logical network topology, showing the sequence of logical flows that would be applied to the packet at each logical stage (ingress port processing, L2 switching, port security checks, etc.) without regard to which physical chassis executes them. Unlike `ovs-appctl ofproto/trace`, which shows the low-level OpenFlow translations on a specific chassis, `ovn-trace` reveals OVN's abstract intent by walking through the logical flows in the order they would be evaluated, demonstrating whether the packet would be delivered, dropped, or redirected based purely on the logical network configuration.
 
 Optional: capture Geneve on either host while pinging:
 
@@ -469,13 +480,13 @@ The verification keeps the same logic as before: same-switch traffic should work
 On `node1`:
 
 ```bash
-ovn-nbctl ls-add ls2
+sudo ovn-nbctl ls-add ls2
 
-ovn-nbctl lsp-add ls2 ls2-port3
-ovn-nbctl lsp-set-addresses ls2-port3 "aa:bb:cc:00:00:03 10.0.2.10"
+sudo vn-nbctl lsp-add ls2 ls2-port3
+sudo vn-nbctl lsp-set-addresses ls2-port3 "aa:bb:cc:00:00:03 10.0.2.10"
 
-ovn-nbctl lsp-add ls2 ls2-port4
-ovn-nbctl lsp-set-addresses ls2-port4 "aa:bb:cc:00:00:04 10.0.2.20"
+sudo vn-nbctl lsp-add ls2 ls2-port4
+sudo vn-nbctl lsp-set-addresses ls2-port4 "aa:bb:cc:00:00:04 10.0.2.20"
 ```
 
 Create and bind the endpoints for `ls2`.
@@ -538,19 +549,19 @@ This is an especially important multi-node step because it demonstrates that bot
 Run on `node1`:
 
 ```bash
-ovn-nbctl lr-add lr1
+sudo ovn-nbctl lr-add lr1
 
-ovn-nbctl lrp-add lr1 lr1-ls1 aa:bb:cc:00:01:01 10.0.1.1/24
-ovn-nbctl lsp-add ls1 ls1-lr1
-ovn-nbctl lsp-set-type ls1-lr1 router
-ovn-nbctl lsp-set-addresses ls1-lr1 router
-ovn-nbctl lsp-set-options ls1-lr1 router-port=lr1-ls1
+sudo ovn-nbctl lrp-add lr1 lr1-ls1 aa:bb:cc:00:01:01 10.0.1.1/24
+sudo ovn-nbctl lsp-add ls1 ls1-lr1
+sudo ovn-nbctl lsp-set-type ls1-lr1 router
+sudo ovn-nbctl lsp-set-addresses ls1-lr1 router
+sudo ovn-nbctl lsp-set-options ls1-lr1 router-port=lr1-ls1
 
-ovn-nbctl lrp-add lr1 lr1-ls2 aa:bb:cc:00:01:02 10.0.2.1/24
-ovn-nbctl lsp-add ls2 ls2-lr1
-ovn-nbctl lsp-set-type ls2-lr1 router
-ovn-nbctl lsp-set-addresses ls2-lr1 router
-ovn-nbctl lsp-set-options ls2-lr1 router-port=lr1-ls2
+sudo ovn-nbctl lrp-add lr1 lr1-ls2 aa:bb:cc:00:01:02 10.0.2.1/24
+sudo ovn-nbctl lsp-add ls2 ls2-lr1
+sudo ovn-nbctl lsp-set-type ls2-lr1 router
+sudo ovn-nbctl lsp-set-addresses ls2-lr1 router
+sudo ovn-nbctl lsp-set-options ls2-lr1 router-port=lr1-ls2
 ```
 
 Add default routes inside the namespaces.
@@ -596,9 +607,9 @@ This is one of the most useful cloud concepts in the lab: policy follows the log
 Run on `node1`:
 
 ```bash
-ovn-nbctl acl-add ls1 from-lport 1000 'ip4' drop
-ovn-nbctl acl-add ls1 from-lport 1100 'ip4 && icmp4' allow-related
-ovn-nbctl acl-add ls1 from-lport 1100 'ip4 && tcp && tcp.dst==22' allow-related
+sudo ovn-nbctl acl-add ls1 from-lport 1000 'ip4' drop
+sudo ovn-nbctl acl-add ls1 from-lport 1100 'ip4 && icmp4' allow-related
+sudo ovn-nbctl acl-add ls1 from-lport 1100 'ip4 && tcp && tcp.dst==22' allow-related
 ```
 
 Validate policy.
@@ -606,27 +617,38 @@ Validate policy.
 On `node1`:
 
 ```bash
-ovn-nbctl acl-list ls1
+sudo ovn-nbctl acl-list ls1
 sudo ip netns exec ns-a ping -c 2 10.0.1.20
 ```
 
 On `node2`:
 
 ```bash
-sudo ip netns exec ns-b bash -c 'nc -l -p 22 &'
+sudo ip netns exec ns-b bash -c 'nc -l -p 22'
 ```
 
 On `node1`:
 
 ```bash
 sudo ip netns exec ns-a bash -c 'echo hello | nc -w 2 10.0.1.20 22'
+```
+
+On `node2`:
+
+```bash
+sudo ip netns exec ns-b bash -c 'nc -l -p 80'
+```
+
+On `node1`:
+
+```bash
 sudo ip netns exec ns-a bash -c 'echo hello | nc -w 2 10.0.1.20 80'
 ```
 
 Cleanup ACLs after testing:
 
 ```bash
-ovn-nbctl acl-del ls1
+sudo ovn-nbctl acl-del ls1
 ```
 
 ---
@@ -640,11 +662,11 @@ This is a good example of how centralized intent and distributed enforcement wor
 Run on `node1`:
 
 ```bash
-DHCP_OPTS=$(ovn-nbctl create DHCP_Options cidr=10.0.1.0/24 \
+DHCP_OPTS=$(sudo ovn-nbctl create DHCP_Options cidr=10.0.1.0/24 \
   options='"server_id"="10.0.1.1" "server_mac"="aa:bb:cc:00:01:01" "lease_time"="3600" "router"="10.0.1.1"')
 
-ovn-nbctl lsp-set-dhcpv4-options ls1-port1 $DHCP_OPTS
-ovn-nbctl lsp-set-dhcpv4-options ls1-port2 $DHCP_OPTS
+sudo ovn-nbctl lsp-set-dhcpv4-options ls1-port1 $DHCP_OPTS
+sudo ovn-nbctl lsp-set-dhcpv4-options ls1-port2 $DHCP_OPTS
 ```
 
 Test DHCP from both hosts.
@@ -680,12 +702,12 @@ At this point you should be able to reason about three layers clearly: OVN inten
 On `node1`:
 
 ```bash
-ovn-nbctl show
-ovn-sbctl show
-ovn-sbctl lflow-list
-ovn-sbctl list Chassis
+sudo ovn-nbctl show
+sudo ovn-sbctl show
+sudo ovn-sbctl lflow-list
+sudo ovn-sbctl list Chassis
 sudo ovs-ofctl dump-flows br-int | wc -l
-ovn-sbctl lflow-list ls1 | grep -i arp
+sudo ovn-sbctl lflow-list ls1 | grep -i arp
 ```
 
 On `node2`:
@@ -749,12 +771,12 @@ sudo systemctl daemon-reload
 Run on `node1`:
 
 ```bash
-ovn-nbctl lr-del lr1
-ovn-nbctl ls-del ls1
-ovn-nbctl ls-del ls2
+sudo ovn-nbctl lr-del lr1
+sudo ovn-nbctl ls-del ls1
+sudo ovn-nbctl ls-del ls2
 
 for uuid in $(ovn-nbctl --no-headings --columns=_uuid find DHCP_Options | awk '{print $3}'); do
-  ovn-nbctl destroy DHCP_Options $uuid
+  sudo ovn-nbctl destroy DHCP_Options $uuid
 done
 
 sudo ip netns delete ns-a 2>/dev/null
@@ -778,13 +800,3 @@ Optional: if you also want to remove the persistent listener configuration from 
 sudo ovn-nbctl del-connection
 sudo ovn-sbctl del-connection
 ```
-
----
-
-## 7. Quick review
-
-- Why does `ovn-remote` have to point to a real Southbound IP in a multi-node setup?
-- Why do the namespace MAC and IP values need to match the logical port addresses?
-- What evidence proves that `ls1` is stretched across both hosts?
-- What changed in the datapath when the destination moved from local to remote?
-- Why are ACLs still defined once even though the workloads live on different nodes?
