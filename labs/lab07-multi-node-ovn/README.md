@@ -482,11 +482,11 @@ On `node1`:
 ```bash
 sudo ovn-nbctl ls-add ls2
 
-sudo vn-nbctl lsp-add ls2 ls2-port3
-sudo vn-nbctl lsp-set-addresses ls2-port3 "aa:bb:cc:00:00:03 10.0.2.10"
+sudo ovn-nbctl lsp-add ls2 ls2-port3
+sudo ovn-nbctl lsp-set-addresses ls2-port3 "aa:bb:cc:00:00:03 10.0.2.10"
 
-sudo vn-nbctl lsp-add ls2 ls2-port4
-sudo vn-nbctl lsp-set-addresses ls2-port4 "aa:bb:cc:00:00:04 10.0.2.20"
+sudo ovn-nbctl lsp-add ls2 ls2-port4
+sudo ovn-nbctl lsp-set-addresses ls2-port4 "aa:bb:cc:00:00:04 10.0.2.20"
 ```
 
 Create and bind the endpoints for `ls2`.
