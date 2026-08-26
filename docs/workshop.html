@@ -163,6 +163,13 @@ footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;
   <h4>OVN</h4>
   <ul>
     <li><a data-go="lab5" class="navlink">5. OVN basics</a></li>
+    <li><a data-go="lab6" class="navlink">6. Native services &amp; security groups</a></li>
+    <li><a data-go="lab7" class="navlink">7. Multi-node OVN</a></li>
+    <li><a data-go="lab8" class="navlink">8. Multi-chassis, DVR &amp; FIPs</a></li>
+  </ul>
+  <h4>Capstone</h4>
+  <ul>
+    <li><a data-go="lab9" class="navlink">9. Neutron ML2/OVN</a></li>
   </ul>
   <h4>Reference</h4>
   <ul>
@@ -178,15 +185,19 @@ footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;
     <h1>OpenStack Networking Workshop</h1>
     <p>Build a complete OpenStack-style virtual network from first principles &mdash; namespaces, veth pairs, Open vSwitch, OpenFlow, and finally OVN.</p>
   </div>
-  <p>This workshop walks you, hands-on, through the same data-plane primitives OpenStack Neutron uses under the hood. Five labs, roughly 6.5 hours end to end, no real cloud required &mdash; everything can be done in the embedded mock lab environment.</p>
+  <p>This workshop walks you, hands-on, through the same data-plane primitives OpenStack Neutron uses under the hood. Nine labs, roughly 10.5 hours end to end. Labs 1&ndash;5 need nothing but this page &mdash; they run in the embedded mock lab environment. Labs 6&ndash;9 step up to a real Linux host, a second node, and finally a live OpenStack cloud.</p>
 
-  <h2>The five labs</h2>
+  <h2>The nine labs</h2>
   <div class="lab-grid">
     <a class="lab-card" data-go="lab1"><span class="n">Lab 1 · ~45 min</span><span class="ti">TAP devices &amp; namespaces</span><p class="d">Isolation primitives: virtual NICs and per-process network stacks.</p></a>
     <a class="lab-card" data-go="lab2"><span class="n">Lab 2 · ~45 min</span><span class="ti">Veth pairs</span><p class="d">Connect two namespaces and watch ARP fly across the wire.</p></a>
     <a class="lab-card" data-go="lab3"><span class="n">Lab 3 · ~1 hr</span><span class="ti">OVS as an L2 switch</span><p class="d">Three namespaces, one virtual switch, MAC learning in action.</p></a>
     <a class="lab-card" data-go="lab4"><span class="n">Lab 4 · ~1.5 hr</span><span class="ti">OpenFlow rules &amp; tunnels</span><p class="d">Program OVS by hand. Drop traffic with a flow. Meet VXLAN and Geneve.</p></a>
     <a class="lab-card" data-go="lab5"><span class="n">Lab 5 · ~2.5 hr</span><span class="ti">OVN basics</span><p class="d">Logical switches, routers, ACLs, native DHCP. Map it all to Neutron.</p></a>
+    <a class="lab-card" data-go="lab6"><span class="n">Lab 6 · ~1.5 hr</span><span class="ti">Native services &amp; security groups</span><p class="d">DHCP, IPAM, DNS, metadata, port groups and stateful ACLs.</p></a>
+    <a class="lab-card" data-go="lab7"><span class="n">Lab 7 · ~1 hr</span><span class="ti">Multi-node OVN</span><p class="d">Two hosts, one logical switch, Geneve tunnels in between.</p></a>
+    <a class="lab-card" data-go="lab8"><span class="n">Lab 8 · ~45 min</span><span class="ti">Multi-chassis, DVR &amp; FIPs</span><p class="d">Distributed routing, gateway HA with BFD, floating IPs.</p></a>
+    <a class="lab-card" data-go="lab9"><span class="n">Lab 9 · ~45 min</span><span class="ti">Neutron ML2/OVN</span><p class="d">Capstone: watch OpenStack write the OVN database you built by hand.</p></a>
   </div>
 
   <h2>What you will learn</h2>
@@ -196,13 +207,18 @@ footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;
     <li>How OpenFlow rules are matched, prioritised, and chained across tables.</li>
     <li>How VXLAN encapsulates Layer&nbsp;2 over a routed underlay &mdash; and why OVN prefers Geneve.</li>
     <li>How every OVN concept (logical switch, router, ACL, DHCP options) maps onto Neutron CLI calls.</li>
+    <li>How OVN serves DHCP, DNS, and instance metadata without a single daemon on a network node.</li>
+    <li>How OpenStack security groups are modelled as port groups, address sets, and stateful ACLs.</li>
+    <li>How distributed routing, gateway HA, and floating IPs actually behave across multiple chassis.</li>
+    <li>How Neutron&rsquo;s ML2/OVN driver turns an API call into an OpenFlow rule on a compute node.</li>
   </ul>
 
   <h2>Recommended path</h2>
   <ol>
     <li>Read <a data-go="getting-started">Getting started</a> for prerequisites and environment options.</li>
     <li>Skim the <a data-go="lab-env">Lab environment</a> page to learn the embedded terminal.</li>
-    <li>Work through Labs 1&ndash;5 in order &mdash; each builds on the previous.</li>
+    <li>Work through Labs 1&ndash;5 in order &mdash; each builds on the previous, and all of them run in the embedded terminal.</li>
+    <li>For Labs 6&ndash;9, provision a real Linux host (and a second node from Lab 7 on). See <a data-go="getting-started">Getting started</a>.</li>
     <li>Keep the <a data-go="reference">Command reference</a> open in another tab.</li>
   </ol>
 </section>
@@ -741,6 +757,687 @@ footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;
 
   <nav class="pgn">
     <a class="prev" data-go="lab4"><span class="lbl">Previous</span><span class="ttl">Lab 4 &mdash; OpenFlow</span></a>
+    <a class="next" data-go="lab6"><span class="lbl">Next</span><span class="ttl">Lab 6 &mdash; OVN native services</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 6 ============== -->
+<section id="lab6" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>OVN<span class="sep">›</span>Lab 6</p>
+  <h1>Lab 6 &mdash; OVN native services &amp; security groups</h1>
+  <dl class="meta"><dt>Tier</dt><dd>OVN</dd><dt>Duration</dt><dd>~90 minutes</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;5 completed. A Linux host with OVN installed.</dd></dl>
+
+  <div class="adm warn"><span class="l">REAL HOST REQUIRED</span><p>From Lab 6 onward the exercises use OVN features the embedded mock terminal does not simulate (<code>DHCP_Options</code>, <code>DNS</code>, port groups, address sets). Run these commands on a real Linux host or VM with <code>ovn-central</code> and <code>ovn-host</code> installed.</p></div>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Replace hardcoded addressing with OVN-native DHCP and IPAM.</li>
+    <li>Serve DNS and instance metadata directly from the OVN data plane.</li>
+    <li>Model OpenStack security groups with port groups, address sets, and stateful ACLs.</li>
+    <li>Map each mechanism onto the Neutron object that drives it.</li>
+  </ul>
+
+  <h2>What Lab 5 hardcoded</h2>
+  <p>In Lab 5 every port got a fixed MAC and IP, typed twice &mdash; once in the namespace with <code>ip addr add</code>, once in OVN with <code>lsp-set-addresses</code>. Real clouds do not work that way: a VM boots knowing nothing, and the network tells it who it is. That handoff is DHCP, DNS, and metadata &mdash; and in OVN all three are <strong>distributed</strong>, implemented as logical flows on every chassis rather than as a daemon on a network node.</p>
+
+  <table>
+    <thead><tr><th>Lab 5 did this</th><th>A real cloud does this</th><th>OVN mechanism</th></tr></thead>
+    <tbody>
+      <tr><td>Type the IP into the namespace</td><td>VM asks for an address</td><td><code>DHCP_Options</code> + <code>put_dhcp_opts</code></td></tr>
+      <tr><td>Type the MAC into OVN</td><td>Controller allocates one</td><td><code>lsp-set-addresses &lt;port&gt; dynamic</code></td></tr>
+      <tr><td>No name resolution</td><td>Instances resolve each other</td><td><code>DNS</code> table + <code>dns_lookup</code></td></tr>
+      <tr><td>No cloud-init</td><td>VM fetches user-data</td><td><code>localport</code> at 169.254.169.254</td></tr>
+      <tr><td>Per-switch stateless ACLs</td><td>Per-VM stateful security groups</td><td><code>Port_Group</code> + <code>allow-related</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Part A &mdash; OVN-native DHCP</h2>
+  <p>A <code>DHCP_Options</code> row is a <em>description of a DHCP server</em>, not a process. <code>ovn-northd</code> compiles it into logical flows that every chassis installs. When a VM broadcasts DISCOVER, the flow on that VM&rsquo;s own hypervisor answers it. The broadcast never leaves the host, and there is no <code>dnsmasq</code> anywhere.</p>
+
+<pre class="sh"><span class="r">ovn-nbctl create DHCP_Options cidr=10.0.1.0/24 \
+  options="\"server_id\"=\"10.0.1.1\" \"server_mac\"=\"aa:bb:cc:00:01:01\" \
+           \"lease_time\"=\"3600\" \"router\"=\"10.0.1.1\" \"mtu\"=\"1442\""</span></pre>
+
+  <table>
+    <thead><tr><th>Option</th><th>Meaning</th><th>Neutron source</th></tr></thead>
+    <tbody>
+      <tr><td><code>cidr</code></td><td>Subnet this server owns</td><td><code>subnet.cidr</code></td></tr>
+      <tr><td><code>server_id</code> / <code>server_mac</code></td><td>Identity in the OFFER</td><td>Router interface / subnet gateway</td></tr>
+      <tr><td><code>lease_time</code></td><td>Lease duration in seconds</td><td>ML2/OVN default (86400)</td></tr>
+      <tr><td><code>router</code></td><td>Default gateway pushed to the VM</td><td><code>subnet.gateway_ip</code></td></tr>
+      <tr><td><code>mtu</code></td><td>MTU pushed to the VM</td><td><code>path_mtu</code> minus Geneve overhead</td></tr>
+      <tr><td><code>dns_server</code></td><td>Resolver list</td><td><code>subnet.dns_nameservers</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="adm note"><span class="l">MTU</span><p>Geneve adds roughly 58 bytes of encapsulation. Pushing 1442 instead of 1500 avoids fragmentation inside the tunnel. Neutron computes this from <code>global_physnet_mtu</code> and <code>path_mtu</code>; getting it wrong is a classic &ldquo;SSH hangs after the banner&rdquo; bug.</p></div>
+
+  <h2>Dynamic addressing (IPAM)</h2>
+  <p><code>lsp-set-addresses</code> takes three forms, and they differ in <em>who owns the address</em>:</p>
+  <table>
+    <thead><tr><th>Form</th><th>MAC</th><th>IP</th><th>Neutron analogue</th></tr></thead>
+    <tbody>
+      <tr><td><code>"aa:bb:cc:00:00:01 10.0.1.10"</code></td><td>you</td><td>you</td><td>Port with a fixed IP</td></tr>
+      <tr><td><code>"aa:bb:cc:00:00:01 dynamic"</code></td><td>you</td><td>OVN</td><td>Port with Neutron-allocated IP</td></tr>
+      <tr><td><code>dynamic</code></td><td>OVN</td><td>OVN</td><td>Fully auto-allocated port</td></tr>
+    </tbody>
+  </table>
+<pre class="sh"><span class="r">ovn-nbctl set Logical_Switch ls1 other_config:subnet="10.0.1.0/24"</span>
+<span class="r">ovn-nbctl set Logical_Switch ls1 other_config:exclude_ips="10.0.1.1..10.0.1.9"</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port1 dynamic</span>
+<span class="r">ovn-nbctl get Logical_Switch_Port ls1-port1 dynamic_addresses</span></pre>
+  <p><code>exclude_ips</code> is OVN&rsquo;s equivalent of a Neutron subnet&rsquo;s allocation pool boundary &mdash; it keeps gateway and service addresses out of the pool.</p>
+
+  <h2>OVN DNS</h2>
+  <p>The <code>DNS</code> table holds name&rarr;address records attached to a logical switch. <code>ovn-northd</code> compiles them into a <code>dns_lookup</code> action, so an instance&rsquo;s query is answered by its own hypervisor.</p>
+<pre class="sh"><span class="r">DNS_UUID=$(ovn-nbctl create DNS records:web1="10.0.1.10")</span>
+<span class="r">ovn-nbctl add Logical_Switch ls1 dns_records $DNS_UUID</span></pre>
+  <p>This is what Neutron calls <em>internal DNS</em>: <code>dns_domain</code> plus the port&rsquo;s <code>dns_name</code>.</p>
+
+  <h2>Metadata &mdash; the <code>localport</code></h2>
+  <p>Every cloud instance fetches user-data from <code>169.254.169.254</code>. That address must exist identically on every hypervisor and must never be tunnelled. OVN&rsquo;s answer is the <strong>localport</strong>: a logical port that exists on <em>every</em> chassis simultaneously and whose traffic is never sent over Geneve.</p>
+  <div class="diag">   VM (any chassis)
+        │  GET http://169.254.169.254/latest/meta-data/
+        ▼
+   ┌────────────────────────┐
+   │  br-int  (this host)   │
+   │   localport  ls1-meta  │  ← same port on every chassis
+   └───────────┬────────────┘
+               │  never crosses a Geneve tunnel
+               ▼
+   ovn-metadata-agent namespace  →  nova-api metadata
+</div>
+<pre class="sh"><span class="r">ovn-nbctl lsp-add ls1 ls1-meta</span>
+<span class="r">ovn-nbctl lsp-set-type ls1-meta localport</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-meta "aa:bb:cc:00:0f:fe 169.254.169.254"</span></pre>
+
+  <h2>Part B &mdash; Security groups</h2>
+  <p>Lab 5&rsquo;s ACLs attached to a <em>logical switch</em>, so every port on the network got the same policy. OpenStack needs two VMs on the <em>same</em> network to sit in different security groups. The OVN construct for that is the <strong>port group</strong>.</p>
+<pre class="sh"><span class="r">ovn-nbctl pg-add pg-web ls1-port1</span>
+<span class="r">ovn-nbctl pg-set-ports pg-web ls1-port1 ls1-port2</span>
+<span class="r">ovn-nbctl list address_set</span></pre>
+  <p>Creating a port group automatically creates two address sets that OVN keeps in sync as members change:</p>
+  <table>
+    <thead><tr><th>Reference</th><th>Expands to</th><th>Use in a match</th></tr></thead>
+    <tbody>
+      <tr><td><code>@pg-web</code></td><td>The member <em>ports</em></td><td><code>outport == @pg-web</code></td></tr>
+      <tr><td><code>$pg-web_ip4</code></td><td>The member <em>IPv4 addresses</em></td><td><code>ip4.src == $pg-web_ip4</code></td></tr>
+      <tr><td><code>$pg-web_ip6</code></td><td>The member IPv6 addresses</td><td><code>ip6.src == $pg-web_ip6</code></td></tr>
+    </tbody>
+  </table>
+  <p>This is exactly how a Neutron <em>remote security group</em> rule stays correct forever: the rule names the group, not the addresses, so adding a VM rewrites the address set rather than the ACL.</p>
+
+  <h3>Stateful ACLs</h3>
+<pre class="sh"><span class="r">ovn-nbctl acl-add pg-web to-lport 1000 'outport == @pg-web &amp;&amp; ip4 &amp;&amp; tcp.dst == 80' allow-related</span>
+<span class="r">ovn-nbctl acl-add pg-web from-lport 1001 'inport == @pg-web &amp;&amp; ip4' allow-related</span>
+<span class="r">ovn-nbctl acl-list pg-web</span></pre>
+  <table>
+    <thead><tr><th>Action</th><th>Conntrack</th><th>Return traffic</th><th>Use for</th></tr></thead>
+    <tbody>
+      <tr><td><code>allow</code></td><td>no <code>ct()</code></td><td>needs its own rule</td><td>Stateless, symmetric flows</td></tr>
+      <tr><td><code>allow-related</code></td><td><code>ct_commit</code> + <code>ct_next</code></td><td>allowed automatically</td><td>Neutron security group rules</td></tr>
+      <tr><td><code>allow-stateless</code></td><td>bypasses ct</td><td>needs its own rule</td><td>High-throughput, ct-unfriendly traffic</td></tr>
+      <tr><td><code>drop</code></td><td>&mdash;</td><td>&mdash;</td><td>Silent discard (Neutron default)</td></tr>
+      <tr><td><code>reject</code></td><td>&mdash;</td><td>&mdash;</td><td>Send ICMP/TCP RST back</td></tr>
+    </tbody>
+  </table>
+  <div class="adm tip"><span class="l">DIRECTION</span><p>Direction is expressed from the <em>logical switch&rsquo;s</em> point of view. <code>from-lport</code> is traffic <strong>leaving the VM</strong> (Neutron <em>egress</em>); <code>to-lport</code> is traffic <strong>arriving at the VM</strong> (Neutron <em>ingress</em>). The <code>inport</code>/<code>outport</code> in your match must agree with the direction or the ACL will never fire.</p></div>
+  <div class="adm note"><span class="l">DEFAULT DROP</span><p>As soon as <em>any</em> ACL exists on a switch or port group, OVN installs an implicit low-priority drop for that datapath. That is why a Neutron port with a security group attached is closed by default &mdash; and why removing all rules is not the same as removing the group.</p></div>
+
+  <h2>Neutron mapping</h2>
+  <table>
+    <thead><tr><th>OpenStack</th><th>OVN</th></tr></thead>
+    <tbody>
+      <tr><td><code>openstack subnet create --dhcp</code></td><td><code>DHCP_Options</code> row + <code>lsp-set-dhcpv4-options</code></td></tr>
+      <tr><td>Subnet allocation pool</td><td><code>other_config:subnet</code> + <code>exclude_ips</code></td></tr>
+      <tr><td><code>dns_domain</code> / port <code>dns_name</code></td><td><code>DNS</code> table + <code>dns_records</code></td></tr>
+      <tr><td>Metadata agent</td><td><code>localport</code> at 169.254.169.254</td></tr>
+      <tr><td><code>openstack security group create</code></td><td><code>ovn-nbctl pg-add</code></td></tr>
+      <tr><td><code>openstack security group rule create</code></td><td><code>ovn-nbctl acl-add &lt;pg&gt; ... allow-related</code></td></tr>
+      <tr><td><code>--remote-group &lt;g&gt;</code></td><td><code>$&lt;g&gt;_ip4</code> address set in the match</td></tr>
+      <tr><td><code>openstack server add security group</code></td><td><code>pg-set-ports</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Create a DHCP server row</h3>
+<pre class="sh"><span class="r">DHCP_UUID=$(ovn-nbctl create DHCP_Options cidr=10.0.1.0/24 \
+  options="\"server_id\"=\"10.0.1.1\" \"server_mac\"=\"aa:bb:cc:00:01:01\" \
+           \"lease_time\"=\"3600\" \"router\"=\"10.0.1.1\"")</span>
+<span class="r">ovn-nbctl lsp-set-dhcpv4-options ls1-port1 $DHCP_UUID</span></pre>
+    <p class="v">Verify:</p><ul><li><code>ovn-nbctl list DHCP_Options</code> shows the row.</li><li><code>ovn-sbctl dump-flows ls1 | grep -i dhcp</code> shows <code>put_dhcp_opts</code>.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Lease an address</h3>
+    <p>Flush the hardcoded address inside <code>ns-a</code> and let DHCP assign it.</p>
+<pre class="sh"><span class="r">ip netns exec ns-a ip addr flush dev veth-a</span>
+<span class="r">ip netns exec ns-a dhclient -v veth-a</span></pre>
+    <p class="v">Verify:</p><ul><li>The namespace has 10.0.1.10 and a default route via 10.0.1.1.</li><li><code>tcpdump</code> on the host shows the DISCOVER/OFFER never leaving <code>br-int</code>.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Dynamic addressing</h3>
+<pre class="sh"><span class="r">ovn-nbctl set Logical_Switch ls1 other_config:subnet="10.0.1.0/24"</span>
+<span class="r">ovn-nbctl set Logical_Switch ls1 other_config:exclude_ips="10.0.1.1..10.0.1.9"</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-port3</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port3 dynamic</span>
+<span class="r">ovn-nbctl get Logical_Switch_Port ls1-port3 dynamic_addresses</span></pre>
+    <p class="v">Question:</p><ul><li>Which address was allocated, and why not 10.0.1.1?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; DNS records</h3>
+<pre class="sh"><span class="r">DNS_UUID=$(ovn-nbctl create DNS records:web1="10.0.1.10")</span>
+<span class="r">ovn-nbctl add Logical_Switch ls1 dns_records $DNS_UUID</span>
+<span class="r">ip netns exec ns-b dig @10.0.1.1 web1</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Metadata localport</h3>
+    <p>Add the <code>localport</code> shown above and confirm with <code>ovn-sbctl show</code> that it is bound on <em>every</em> chassis rather than exactly one.</p>
+    <p class="v">Question:</p><ul><li>What would break if metadata used an ordinary logical port instead?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Port groups and stateful ACLs</h3>
+<pre class="sh"><span class="r">ovn-nbctl pg-add pg-web ls1-port1</span>
+<span class="r">ovn-nbctl pg-add pg-db ls1-port2</span>
+<span class="r">ovn-nbctl acl-add pg-db to-lport 1000 'outport == @pg-db &amp;&amp; ip4.src == $pg-web_ip4 &amp;&amp; tcp.dst == 3306' allow-related</span></pre>
+    <p class="v">Verify:</p><ul><li><code>ns-a</code> can reach port 3306 on <code>ns-b</code>; nothing else can.</li><li><code>conntrack -L</code> shows the tracked connection.</li><li>Adding a port to <code>pg-web</code> changes <code>$pg-web_ip4</code> without touching the ACL.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Translate a Neutron rule</h3>
+    <p>Express this by hand in OVN:</p>
+<pre class="sh"><span class="r">openstack security group rule create --ingress --protocol tcp \
+  --dst-port 22 --remote-group admins web</span></pre>
+    <p class="v">Answer with:</p><ul><li>the port group it attaches to,</li><li>the ACL direction,</li><li>the exact match expression,</li><li>the action &mdash; and why.</li></ul>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>Where does an OVN DHCP OFFER physically originate, and why is there no <code>dnsmasq</code>?</li>
+    <li>Compare <code>"&lt;mac&gt; &lt;ip&gt;"</code>, <code>"&lt;mac&gt; dynamic"</code>, and <code>dynamic</code>. Who owns the IP in each?</li>
+    <li>Why does OVN push a smaller MTU over DHCP? Relate it to Geneve overhead and Neutron&rsquo;s <code>path_mtu</code>.</li>
+    <li>What property of a <code>localport</code> makes metadata work identically on every chassis?</li>
+    <li>Why can&rsquo;t per-switch ACLs represent two VMs on one network in different security groups?</li>
+    <li>Which two address sets does a port group create, and when do you use <code>@pg</code> vs <code>$pg_ip4</code>?</li>
+    <li>Explain <code>allow</code> vs <code>allow-related</code> vs <code>allow-stateless</code> in terms of <code>ct()</code> actions.</li>
+    <li>How does a remote-group rule stay correct as members come and go?</li>
+  </ol>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab5"><span class="lbl">Previous</span><span class="ttl">Lab 5 &mdash; OVN basics</span></a>
+    <a class="next" data-go="lab7"><span class="lbl">Next</span><span class="ttl">Lab 7 &mdash; Multi-node OVN</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 7 ============== -->
+<section id="lab7" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>OVN<span class="sep">›</span>Lab 7</p>
+  <h1>Lab 7 &mdash; Multi-node OVN</h1>
+  <dl class="meta"><dt>Tier</dt><dd>OVN</dd><dt>Duration</dt><dd>~1 hour</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;6. Two Linux hosts or VMs with IP connectivity.</dd></dl>
+
+  <div class="adm warn"><span class="l">TWO NODES REQUIRED</span><p>This lab needs <strong>two</strong> machines that can reach each other. The examples use <code>node1 = 192.168.122.11</code> and <code>node2 = 192.168.122.12</code>; substitute your own addresses. The <code>virt-tools/</code> submodule in this repository can build the pair with KVM/libvirt.</p></div>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Split the OVN control plane from the chassis and expose it over TCP.</li>
+    <li>Register a second chassis and bind logical ports across hosts.</li>
+    <li>Observe Geneve encapsulation carrying logical metadata between nodes.</li>
+    <li>Make the whole setup survive a reboot.</li>
+  </ul>
+
+  <h2>Topology</h2>
+  <div class="diag">                    ┌──────────────────────────────┐
+                    │  node1  192.168.122.11       │
+                    │  ovn-central + chassis       │
+                    │                              │
+   Northbound DB ───┤  ovn-nbctl / ovn-sbctl       │
+   Southbound  DB   │  ovn-northd                  │
+   (ptcp:6641/6642) │  ovn-controller ── br-int    │
+                    │        ns-a 10.0.1.10        │
+                    │        ns-c 10.0.2.10        │
+                    └───────────────┬──────────────┘
+                                    │  Geneve  udp/6081
+                    ┌───────────────┴──────────────┐
+                    │  node2  192.168.122.12       │
+                    │  chassis only                │
+                    │  ovn-controller ── br-int    │
+                    │        ns-b 10.0.1.20        │
+                    │        ns-d 10.0.2.20        │
+                    └──────────────────────────────┘
+
+   ls1  10.0.1.0/24   ┐
+                      ├── lr1 routes between them
+   ls2  10.0.2.0/24   ┘</div>
+  <p>Note that <code>ls1</code> spans both hosts. That is the whole point: a logical switch is not a device on a machine, it is a <em>distributed</em> construct realised by flows on every chassis.</p>
+
+  <h2>Environment</h2>
+<pre class="sh"><span class="r">export NODE1_IP=192.168.122.11</span>
+<span class="r">export NODE2_IP=192.168.122.12</span>
+<span class="r">export CENTRAL_IP=$NODE1_IP</span></pre>
+
+  <h2>Exposing the databases</h2>
+  <p>A single-node lab talks to the OVN databases over a Unix socket. As soon as a second chassis exists, the Southbound DB must be reachable over the network.</p>
+<pre class="sh"><span class="r">ovn-nbctl set-connection ptcp:6641:0.0.0.0</span>
+<span class="r">ovn-sbctl set-connection ptcp:6642:0.0.0.0</span>
+<span class="r">ovn-nbctl set Connection . inactivity_probe=60000</span>
+<span class="r">ovn-sbctl set Connection . inactivity_probe=60000</span></pre>
+  <div class="adm note"><span class="l">INACTIVITY PROBE</span><p>The default probe interval is 5&nbsp;s. On a laptop-hosted lab a brief stall makes <code>ovn-controller</code> think central died and reconnect in a loop. Raising it to 60&nbsp;s removes that noise. Production deployments tune this too &mdash; and use SSL rather than plain TCP.</p></div>
+
+  <h2>Registering a chassis</h2>
+  <p>Each chassis advertises three things through the local OVS database. <code>ovn-controller</code> reads them at start-up, connects to the Southbound DB, and creates its <code>Chassis</code> row.</p>
+<pre class="sh"><span class="r">ovs-vsctl set open . \
+  external-ids:ovn-remote=tcp:$CENTRAL_IP:6642 \
+  external-ids:ovn-encap-type=geneve \
+  external-ids:ovn-encap-ip=$NODE2_IP</span>
+<span class="r">ovn-sbctl show</span></pre>
+  <table>
+    <thead><tr><th>external-id</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>ovn-remote</code></td><td>Where the Southbound DB lives</td></tr>
+      <tr><td><code>ovn-encap-type</code></td><td>Overlay protocol &mdash; <code>geneve</code> for OVN</td></tr>
+      <tr><td><code>ovn-encap-ip</code></td><td><em>This</em> node&rsquo;s underlay IP; peers build tunnels to it</td></tr>
+      <tr><td><code>system-id</code></td><td>Chassis name shown by <code>ovn-sbctl show</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Binding a port across hosts</h2>
+  <p>Port binding is the moment a logical port becomes physical. The chassis whose OVS interface carries <code>external-ids:iface-id</code> claims the port in the Southbound DB, and every other chassis learns to tunnel to it.</p>
+<pre class="sh"><span class="r">ovs-vsctl add-port br-int veth-b-ovs</span>
+<span class="r">ovs-vsctl set interface veth-b-ovs external-ids:iface-id=ls1-port2</span>
+<span class="r">ovn-sbctl list Port_Binding ls1-port2</span></pre>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Install OVN on both nodes</h3>
+<pre class="sh"><span class="r">apt install -y ovn-central ovn-host          # node1</span>
+<span class="r">apt install -y ovn-host                      # node2</span></pre>
+    <p class="v">Verify:</p><ul><li><code>systemctl status ovn-northd ovn-controller</code> on node1.</li><li><code>systemctl status ovn-controller</code> on node2.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Expose the databases</h3>
+    <p>Apply the <code>set-connection</code> commands above on node1, then confirm from node2:</p>
+<pre class="sh"><span class="r">ss -lntp | grep 664</span>
+<span class="r">ovn-sbctl --db=tcp:$CENTRAL_IP:6642 show</span></pre>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Register both chassis</h3>
+    <p>Set <code>ovn-remote</code>, <code>ovn-encap-type</code>, and <code>ovn-encap-ip</code> on each node &mdash; using <em>that node&rsquo;s own</em> IP for <code>ovn-encap-ip</code>.</p>
+    <p class="v">Verify:</p><ul><li><code>ovn-sbctl show</code> lists two chassis.</li><li><code>ovs-vsctl show</code> on each node shows a <code>geneve</code> port pointing at the other.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Build <code>ls1</code> across the hosts</h3>
+<pre class="sh"><span class="r">ovn-nbctl ls-add ls1</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-port1</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port1 "aa:bb:cc:00:00:01 10.0.1.10"</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-port2</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-port2 "aa:bb:cc:00:00:02 10.0.1.20"</span></pre>
+    <p>Create <code>ns-a</code> on node1 and <code>ns-b</code> on node2, wire each to <code>br-int</code> with a veth pair, and set <code>iface-id</code> to bind them.</p>
+    <p class="v">Verify:</p><ul><li><code>ovn-sbctl show</code> binds each port to a <em>different</em> chassis.</li><li><code>ip netns exec ns-a ping 10.0.1.20</code> succeeds &mdash; across two machines, with no route between the namespaces.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Make it survive a reboot</h3>
+    <p>Namespaces and veth pairs are runtime state; the OVN configuration is not. Use the scripts under <code>persistence/node1/</code> and <code>persistence/node2/</code>:</p>
+<pre class="sh"><span class="r">install -m 0755 ovn-lab-endpoints-node1.sh /usr/local/sbin/</span>
+<span class="r">install -m 0644 ovn-lab-endpoints.service /etc/systemd/system/</span>
+<span class="r">systemctl daemon-reload &amp;&amp; systemctl enable --now ovn-lab-endpoints.service</span></pre>
+    <p class="v">Verify:</p><ul><li>Reboot both nodes; the ping still works with no manual steps.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Watch Geneve on the wire</h3>
+<pre class="sh"><span class="r">tcpdump -ni any udp port 6081</span></pre>
+    <p>Ping from <code>ns-a</code> to <code>ns-b</code> while capturing on the underlay interface.</p>
+    <p class="v">Question:</p><ul><li>Which logical datapath and logical port IDs appear in the Geneve TLV options, and why does VXLAN have nowhere to put them?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Trace the packet through all three layers</h3>
+<pre class="sh"><span class="r">ovn-sbctl lflow-list ls1</span>
+<span class="r">ovn-trace --detailed ls1 'inport=="ls1-port1" &amp;&amp; eth.src==aa:bb:cc:00:00:01 &amp;&amp; ip4.dst==10.0.1.20'</span>
+<span class="r">ovs-appctl ofproto/trace br-int in_port=&lt;n&gt;,dl_src=aa:bb:cc:00:00:01</span></pre>
+    <p class="v">Question:</p><ul><li>At which stage does the logical output port become a tunnel port?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 8 &mdash; A second logical switch</h3>
+    <p>Create <code>ls2</code> on 10.0.2.0/24 with <code>ns-c</code> on node1 and <code>ns-d</code> on node2. Confirm intra-switch pings work and cross-switch pings do not.</p>
+  </div>
+  <div class="ex"><h3>Exercise 9 &mdash; Route between them</h3>
+<pre class="sh"><span class="r">ovn-nbctl lr-add lr1</span>
+<span class="r">ovn-nbctl lrp-add lr1 lr1-ls1 aa:bb:cc:00:01:01 10.0.1.1/24</span>
+<span class="r">ovn-nbctl lrp-add lr1 lr1-ls2 aa:bb:cc:00:01:02 10.0.2.1/24</span>
+<span class="r">ovn-nbctl lsp-add ls1 ls1-lr1</span>
+<span class="r">ovn-nbctl lsp-set-type ls1-lr1 router</span>
+<span class="r">ovn-nbctl lsp-set-addresses ls1-lr1 router</span>
+<span class="r">ovn-nbctl lsp-set-options ls1-lr1 router-port=lr1-ls1</span></pre>
+    <p>Repeat for <code>ls2</code>, add default routes inside each namespace, then ping <code>ns-a</code> &rarr; <code>ns-d</code>.</p>
+    <p class="v">Question:</p><ul><li>Which chassis performed the routing decision, and how do you prove it?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 10 &mdash; ACLs and DHCP across nodes</h3>
+    <p>Apply a Lab 6 port group and a <code>DHCP_Options</code> row, then confirm both behave identically on node2 &mdash; the policy and the DHCP server follow the port, not the host.</p>
+  </div>
+  <div class="ex"><h3>Exercise 11 &mdash; Capstone mapping</h3>
+    <table>
+      <thead><tr><th>What you typed</th><th>What OpenStack would type</th></tr></thead>
+      <tbody>
+        <tr><td><code>ovn-nbctl ls-add ls1</code></td><td><code>openstack network create net1</code></td></tr>
+        <tr><td><code>ovn-nbctl lsp-add ls1 ls1-port1</code></td><td><code>openstack port create --network net1 port1</code></td></tr>
+        <tr><td><code>ovn-nbctl lr-add lr1</code></td><td><code>openstack router create router1</code></td></tr>
+        <tr><td><code>ovn-nbctl lrp-add ...</code></td><td><code>openstack router add subnet ...</code></td></tr>
+        <tr><td><code>ovn-nbctl acl-add ...</code></td><td><code>openstack security group rule create ...</code></td></tr>
+        <tr><td><code>ovn-nbctl create DHCP_Options ...</code></td><td><code>openstack subnet create --dhcp ...</code></td></tr>
+        <tr><td><code>ovs-vsctl set interface ... iface-id=...</code></td><td>Nova plugging a VM TAP into <code>br-int</code></td></tr>
+        <tr><td>Geneve tunnel between nodes</td><td>OVN transport between compute nodes</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Cleanup</h2>
+  <p>The cleanup below removes the logical topology and the namespace wiring but deliberately leaves the persistent OVN service configuration in place, so the lab can be rebooted and reused.</p>
+<pre class="sh"><span class="r">systemctl disable --now ovn-lab-endpoints.service       # both nodes</span>
+<span class="r">ovn-nbctl lr-del lr1; ovn-nbctl ls-del ls1; ovn-nbctl ls-del ls2   # node1</span>
+<span class="r">ip netns delete ns-a; ovs-vsctl --if-exists del-port br-int veth-a-ovs</span></pre>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab6"><span class="lbl">Previous</span><span class="ttl">Lab 6 &mdash; OVN native services</span></a>
+    <a class="next" data-go="lab8"><span class="lbl">Next</span><span class="ttl">Lab 8 &mdash; Multi-chassis OVN</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 8 ============== -->
+<section id="lab8" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>OVN<span class="sep">›</span>Lab 8</p>
+  <h1>Lab 8 &mdash; Multi-chassis OVN: DVR, gateway HA &amp; floating IPs</h1>
+  <dl class="meta"><dt>Tier</dt><dd>OVN</dd><dt>Duration</dt><dd>~45 minutes</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;7. KVM/libvirt for the VM pair.</dd></dl>
+
+  <div class="adm warn"><span class="l">VIRTUALISATION REQUIRED</span><p>This lab treats each node as a hypervisor. Build the VMs with the <code>virt-tools/</code> submodule, or reuse the two nodes from Lab 7.</p></div>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>See the Geneve tunnel mesh build itself from chassis registration alone.</li>
+    <li>Prove that east/west routing is distributed and happens on the source chassis.</li>
+    <li>Configure a gateway HA chassis group and watch BFD drive failover.</li>
+    <li>Compare centralized and distributed floating IPs.</li>
+  </ul>
+
+  <h2>Topology</h2>
+  <div class="diag">        ┌──────────── node1 (chassis) ────────────┐   ┌──────────── node2 (chassis) ────────────┐
+        │  ovn-central (NB/SB over TCP)           │   │                                         │
+        │  ovn-controller                         │   │  ovn-controller                         │
+        │  br-int ── ns-a 10.0.1.10               │   │  br-int ── ns-b 10.0.1.20               │
+        │  br-ex  ── external 172.24.4.0/24       │   │                                         │
+        └───────────────────┬─────────────────────┘   └────────────────────┬────────────────────┘
+                            │        genev_sys_6081 (auto)                 │
+                            └──────────────────────────────────────────────┘
+
+        Logical:  ls1 ──── lr1 ──── ls-ext ──── localnet ──── physical network
+                                    ▲
+                                    └─ cr-lrp lives on ONE chassis (the gateway)</div>
+
+  <h2>Concepts</h2>
+  <h3>A chassis is a hypervisor</h3>
+  <p>Nothing about a chassis is special beyond <code>ovn-controller</code>, an integration bridge, and three <code>external-ids</code>. Add the row, and the rest of the fabric adapts. This is why adding a compute node to OpenStack is a package install plus configuration, not a topology change.</p>
+
+  <h3>The tunnel mesh is automatic</h3>
+  <p>You never create a Geneve tunnel in OVN. When a chassis registers with an <code>ovn-encap-ip</code>, every other <code>ovn-controller</code> sees the new <code>Chassis</code> row and adds a port to the <code>genev_sys_6081</code> mesh. Remove the chassis and the tunnels disappear.</p>
+<pre class="sh"><span class="r">ovs-vsctl show | grep -A3 geneve</span>
+<span class="r">ovs-appctl bfd/show</span></pre>
+
+  <h3>East/west routing is distributed (DVR)</h3>
+  <p>A logical router is not a device on a node. Its flows are installed on <em>every</em> chassis, so a packet from <code>ns-a</code> to a VM on another subnet is routed by the source hypervisor and then tunnelled straight to the destination hypervisor. There is no hairpin through a network node.</p>
+
+  <h3>North/south is centralized on a <code>cr-lrp</code></h3>
+  <p>SNAT is stateful, and conntrack state cannot be replicated across every hypervisor. So the router port that faces the external network gets a <strong>chassisredirect</strong> port &mdash; <code>cr-lrp</code> &mdash; pinned to a single chassis. Traffic that needs SNAT is tunnelled to that chassis first.</p>
+<pre class="sh"><span class="r">ovn-sbctl show | grep cr-</span>
+<span class="r">ovn-sbctl list Port_Binding | grep -A5 chassisredirect</span></pre>
+
+  <h3>Gateway HA</h3>
+  <p>Pinning to one chassis is a single point of failure, so OVN lets you nominate several candidates with priorities. The highest-priority reachable candidate wins; liveness comes from BFD over the Geneve tunnels, so failover is sub-second rather than a timeout.</p>
+<pre class="sh"><span class="r">ovn-nbctl lrp-set-gateway-chassis lr1-ext node1 100</span>
+<span class="r">ovn-nbctl lrp-set-gateway-chassis lr1-ext node2 50</span>
+<span class="r">ovn-nbctl lrp-get-gateway-chassis lr1-ext</span></pre>
+  <p>This is precisely OpenStack&rsquo;s <em>L3 HA</em> for ML2/OVN &mdash; and <code>max_gw_chassis</code> in <code>neutron.conf</code> caps the candidate list.</p>
+
+  <h3>Floating IPs: centralized vs distributed</h3>
+  <table>
+    <thead><tr><th></th><th>Centralized FIP</th><th>Distributed FIP</th></tr></thead>
+    <tbody>
+      <tr><td>Command</td><td><code>lr-nat-add lr1 dnat_and_snat &lt;fip&gt; &lt;ip&gt;</code></td><td><code>lr-nat-add lr1 dnat_and_snat &lt;fip&gt; &lt;ip&gt; &lt;lsp&gt; &lt;mac&gt;</code></td></tr>
+      <tr><td>Where NAT happens</td><td>On the gateway chassis</td><td>On the VM&rsquo;s own chassis</td></tr>
+      <tr><td>Path</td><td>VM &rarr; tunnel &rarr; gateway &rarr; external</td><td>VM &rarr; local <code>br-ex</code> &rarr; external</td></tr>
+      <tr><td>ARP for the FIP</td><td>Gateway chassis answers</td><td>The VM&rsquo;s chassis answers</td></tr>
+      <tr><td>Neutron equivalent</td><td>Default</td><td><code>enable_distributed_floating_ip=True</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Neutron mapping</h2>
+  <table>
+    <thead><tr><th>OpenStack</th><th>OVN</th></tr></thead>
+    <tbody>
+      <tr><td>Compute node</td><td><code>Chassis</code> row + <code>ovn-controller</code></td></tr>
+      <tr><td>Tenant network overlay</td><td>Geneve mesh on <code>genev_sys_6081</code></td></tr>
+      <tr><td>DVR</td><td>Router flows on every chassis</td></tr>
+      <tr><td>L3 HA</td><td>Gateway chassis group + BFD</td></tr>
+      <tr><td>External gateway</td><td><code>cr-lrp</code> + <code>snat</code></td></tr>
+      <tr><td>Floating IP</td><td><code>dnat_and_snat</code></td></tr>
+      <tr><td>Provider network</td><td><code>localnet</code> port + bridge mapping</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; From Unix socket to TCP</h3>
+<pre class="sh"><span class="r">ovn-nbctl set-connection ptcp:6641:0.0.0.0</span>
+<span class="r">ovn-sbctl set-connection ptcp:6642:0.0.0.0</span></pre>
+    <p class="v">Verify:</p><ul><li><code>ss -lntp | grep 664</code> on node1.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Watch the tunnel mesh appear</h3>
+    <p>Register node2 as a chassis, then immediately inspect node1 <em>without touching it</em>.</p>
+<pre class="sh"><span class="r">ovn-sbctl show</span>
+<span class="r">ovs-vsctl show | grep -B2 -A6 geneve</span></pre>
+    <p class="v">Question:</p><ul><li>Who created the tunnel port, and from which database row?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Prove east/west is distributed</h3>
+    <p>Ping between namespaces on different subnets and different hosts while capturing on both nodes.</p>
+<pre class="sh"><span class="r">tcpdump -ni any udp port 6081</span>
+<span class="r">ovn-trace --detailed ls1 'inport=="ls1-port1" &amp;&amp; ip4.dst==10.0.2.20'</span></pre>
+    <p class="v">Verify:</p><ul><li>The TTL is decremented exactly once.</li><li>The packet goes source chassis &rarr; destination chassis directly.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Find the <code>cr-lrp</code></h3>
+    <p>Attach <code>lr1</code> to an external switch with a <code>localnet</code> port and set an external gateway. Locate the chassisredirect port and note which chassis owns it.</p>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; Gateway HA and failover</h3>
+    <p>Add both chassis as gateway candidates, start a long-running ping to an external address, then stop <code>ovn-controller</code> on the active gateway.</p>
+<pre class="sh"><span class="r">ovn-nbctl lrp-set-gateway-chassis lr1-ext node1 100</span>
+<span class="r">ovn-nbctl lrp-set-gateway-chassis lr1-ext node2 50</span>
+<span class="r">systemctl stop ovn-controller</span>
+<span class="r">ovs-appctl bfd/show</span></pre>
+    <p class="v">Verify:</p><ul><li>How many pings were lost?</li><li><code>ovn-sbctl show</code> now reports the <code>cr-lrp</code> on the other chassis.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Centralized floating IP</h3>
+<pre class="sh"><span class="r">ovn-nbctl lr-nat-add lr1 dnat_and_snat 172.24.4.100 10.0.1.10</span>
+<span class="r">ovn-nbctl lr-nat-list lr1</span></pre>
+    <p class="v">Verify:</p><ul><li>Traffic to the FIP arrives via the gateway chassis, even though the VM is elsewhere.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Distributed floating IP</h3>
+<pre class="sh"><span class="r">ovn-nbctl lr-nat-del lr1 dnat_and_snat 172.24.4.100</span>
+<span class="r">ovn-nbctl lr-nat-add lr1 dnat_and_snat 172.24.4.100 10.0.1.10 ls1-port1 aa:bb:cc:00:00:01</span></pre>
+    <p class="v">Question:</p><ul><li>Which chassis answers ARP for 172.24.4.100 now, and why did adding the port and MAC change that?</li></ul>
+  </div>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>What exactly is a chassis, and what does it run locally versus share centrally?</li>
+    <li>Who creates the Geneve tunnels, and what does Geneve carry that VXLAN cannot?</li>
+    <li>Why is east/west routing distributed but north/south SNAT centralized?</li>
+    <li>How is the active gateway elected, and how is failure detected?</li>
+    <li>In data-path terms, what is the difference between a centralized and a distributed floating IP?</li>
+    <li>Map this lab onto a cloud with three compute nodes and two network nodes: where do DVR, L3 HA, and FIPs live?</li>
+  </ol>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab7"><span class="lbl">Previous</span><span class="ttl">Lab 7 &mdash; Multi-node OVN</span></a>
+    <a class="next" data-go="lab9"><span class="lbl">Next</span><span class="ttl">Lab 9 &mdash; Neutron ML2/OVN</span></a>
+  </nav>
+</section>
+
+<!-- ============== LAB 9 ============== -->
+<section id="lab9" class="page">
+  <p class="bc">Workshop<span class="sep">›</span>OVN<span class="sep">›</span>Lab 9</p>
+  <h1>Lab 9 &mdash; The OpenStack layer: Neutron ML2/OVN</h1>
+  <dl class="meta"><dt>Tier</dt><dd>OVN &mdash; capstone</dd><dt>Duration</dt><dd>~45 minutes</dd><dt>Prerequisites</dt><dd>Labs 1&ndash;8. An all-in-one OpenStack (DevStack or MicroStack) with the OVN driver.</dd></dl>
+
+  <div class="adm warn"><span class="l">OPENSTACK REQUIRED</span><p>This capstone needs a working OpenStack deployment using ML2/OVN. A single DevStack VM (8&nbsp;GB RAM, 4&nbsp;vCPU, 40&nbsp;GB disk) is enough. Nothing here is simulated.</p></div>
+
+  <h2>Objectives</h2>
+  <ul>
+    <li>Watch Neutron write into the OVN Northbound DB in real time.</li>
+    <li>Map every OpenStack network object to the OVN row it produces.</li>
+    <li>Distinguish tenant (Geneve) from provider (<code>localnet</code>) networks.</li>
+    <li>Trace one port from <code>openstack server create</code> down to an OpenFlow rule.</li>
+  </ul>
+
+  <h2>The control-plane stack</h2>
+  <div class="diag">   openstack CLI / Horizon / Heat
+              │  REST
+              ▼
+   ┌──────────────────────────┐
+   │  neutron-server          │
+   │    ML2 plugin            │
+   │      mechanism_driver    │
+   │        = ovn             │
+   └────────────┬─────────────┘
+                │ writes  (OVSDB)
+                ▼
+   ┌──────────────────────────┐
+   │  OVN Northbound DB       │   ← everything you typed in Labs 5–8
+   └────────────┬─────────────┘
+                │ ovn-northd compiles
+                ▼
+   ┌──────────────────────────┐
+   │  OVN Southbound DB       │   logical flows + Port_Binding
+   └────────────┬─────────────┘
+                │ ovn-controller (per compute node)
+                ▼
+   ┌──────────────────────────┐
+   │  br-int  OpenFlow rules  │   ← the actual data plane
+   └──────────────────────────┘</div>
+  <p>Read that stack top to bottom and the point of the whole workshop becomes clear: <strong>the bottom four boxes are identical</strong> whether a human or Neutron writes the Northbound DB. OpenStack does not add a data plane; it adds an API, a scheduler, and lifecycle management on top of the one you already built.</p>
+
+  <div class="adm note"><span class="l">NO AGENTS</span><p>ML2/OVN removes <code>neutron-openvswitch-agent</code>, <code>neutron-l3-agent</code>, and <code>neutron-dhcp-agent</code> entirely. Their jobs are done by logical flows on every chassis. The only agent left is <code>ovn-metadata-agent</code>, which serves the <code>localport</code> from Lab 6.</p></div>
+
+  <h2>Object mapping</h2>
+  <table>
+    <thead><tr><th>OpenStack object</th><th>OVN Northbound row</th><th>Introduced in</th></tr></thead>
+    <tbody>
+      <tr><td>Network (tenant)</td><td><code>Logical_Switch</code></td><td>Lab 5</td></tr>
+      <tr><td>Network (provider)</td><td><code>Logical_Switch</code> + <code>localnet</code> port</td><td>Lab 8</td></tr>
+      <tr><td>Subnet</td><td><code>DHCP_Options</code> + <code>other_config:subnet</code></td><td>Lab 6</td></tr>
+      <tr><td>Port</td><td><code>Logical_Switch_Port</code></td><td>Lab 5</td></tr>
+      <tr><td>Security group</td><td><code>Port_Group</code> (+ auto address sets)</td><td>Lab 6</td></tr>
+      <tr><td>Security group rule</td><td><code>ACL</code> with <code>allow-related</code></td><td>Lab 6</td></tr>
+      <tr><td>Router</td><td><code>Logical_Router</code></td><td>Lab 5</td></tr>
+      <tr><td>Router interface</td><td><code>Logical_Router_Port</code> + router-type LSP</td><td>Lab 5</td></tr>
+      <tr><td>External gateway</td><td><code>snat</code> NAT + <code>cr-lrp</code></td><td>Lab 8</td></tr>
+      <tr><td>Floating IP</td><td><code>dnat_and_snat</code> NAT</td><td>Lab 8</td></tr>
+      <tr><td>Compute node</td><td><code>Chassis</code></td><td>Lab 7</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Tenant vs provider networks</h2>
+  <table>
+    <thead><tr><th></th><th>Tenant network</th><th>Provider network</th></tr></thead>
+    <tbody>
+      <tr><td>Created with</td><td><code>openstack network create net1</code></td><td><code>--provider-network-type flat --provider-physical-network public</code></td></tr>
+      <tr><td>Transport</td><td>Geneve overlay</td><td>Physical VLAN or flat segment</td></tr>
+      <tr><td>OVN artefact</td><td>Plain <code>Logical_Switch</code></td><td><code>Logical_Switch</code> + <code>localnet</code> port</td></tr>
+      <tr><td>Needs</td><td>Nothing extra</td><td><code>ovn-bridge-mappings</code> on each chassis</td></tr>
+    </tbody>
+  </table>
+<pre class="sh"><span class="r">ovs-vsctl set open . external-ids:ovn-bridge-mappings=public:br-ex</span></pre>
+
+  <h2>Exercises</h2>
+  <div class="ex"><h3>Exercise 1 &mdash; Deploy DevStack with OVN</h3>
+    <p>On a fresh Ubuntu VM, use a <code>local.conf</code> like this:</p>
+<pre>[[local|localrc]]
+ADMIN_PASSWORD=secret
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+Q_AGENT=ovn
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovn,logger
+Q_ML2_TENANT_NETWORK_TYPE=geneve
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+
+enable_service ovn-northd
+enable_service ovn-controller
+enable_service q-ovn-metadata-agent
+disable_service q-agt q-l3 q-dhcp</pre>
+    <p class="v">Verify:</p><ul><li><code>openstack network agent list</code> shows only OVN agents.</li><li><code>ovn-nbctl show</code> already contains the DevStack default networks.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 2 &mdash; Diff the Northbound DB</h3>
+<pre class="sh"><span class="r">ovn-nbctl show &gt; /tmp/before.txt</span>
+<span class="r">openstack network create demo-net</span>
+<span class="r">openstack subnet create --network demo-net --subnet-range 10.9.0.0/24 demo-subnet</span>
+<span class="r">ovn-nbctl show &gt; /tmp/after.txt; diff /tmp/before.txt /tmp/after.txt</span></pre>
+    <p class="v">Verify:</p><ul><li>One <code>Logical_Switch</code> appeared, named <code>neutron-&lt;network-uuid&gt;</code>.</li><li><code>ovn-nbctl list DHCP_Options</code> shows a row you never created.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 3 &mdash; Security groups become port groups</h3>
+<pre class="sh"><span class="r">openstack security group create web</span>
+<span class="r">openstack security group rule create --ingress --protocol tcp --dst-port 80 web</span>
+<span class="r">ovn-nbctl list port_group</span>
+<span class="r">ovn-nbctl acl-list pg_&lt;sg-uuid&gt;</span></pre>
+    <p class="v">Question:</p><ul><li>Is the generated ACL <code>allow</code> or <code>allow-related</code>? Why must it be that one?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 4 &mdash; Router and floating IP</h3>
+<pre class="sh"><span class="r">openstack router create demo-router</span>
+<span class="r">openstack router add subnet demo-router demo-subnet</span>
+<span class="r">openstack router set --external-gateway public demo-router</span>
+<span class="r">ovn-nbctl lr-nat-list neutron-&lt;router-uuid&gt;</span>
+<span class="r">ovn-sbctl show | grep cr-</span></pre>
+    <p class="v">Verify:</p><ul><li>A <code>snat</code> entry appeared for the tenant subnet.</li><li>A <code>cr-lrp</code> exists, exactly as in Lab 8.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 5 &mdash; A provider network</h3>
+<pre class="sh"><span class="r">openstack network create --provider-network-type flat \
+  --provider-physical-network public --external ext-net</span>
+<span class="r">ovn-nbctl show | grep -A5 localnet</span></pre>
+    <p class="v">Question:</p><ul><li>Which chassis-local setting makes the <code>localnet</code> port actually reach a physical NIC?</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 6 &mdash; Boot a VM and trace it end to end</h3>
+<pre class="sh"><span class="r">openstack server create --flavor m1.tiny --image cirros \
+  --network demo-net --security-group web demo-vm</span>
+<span class="r">openstack port list --server demo-vm</span>
+<span class="r">ovn-nbctl list logical_switch_port &lt;port-uuid&gt;</span>
+<span class="r">ovn-sbctl find Port_Binding logical_port=&lt;port-uuid&gt;</span>
+<span class="r">ovs-vsctl show | grep -B2 iface-id</span>
+<span class="r">ovs-ofctl dump-flows br-int | grep &lt;of-port&gt;</span></pre>
+    <p class="v">Verify:</p><ul><li>The Neutron port UUID is the same string all the way down to <code>external-ids:iface-id</code>.</li><li>The VM got its address, its DNS, and its metadata from OVN &mdash; the three mechanisms from Lab 6.</li></ul>
+  </div>
+  <div class="ex"><h3>Exercise 7 &mdash; Capstone synthesis</h3>
+    <p>Take one <code>openstack server create</code> and write out, in order, every layer it touches: Nova &rarr; Neutron API &rarr; ML2/OVN driver &rarr; Northbound DB &rarr; <code>ovn-northd</code> &rarr; Southbound DB &rarr; <code>ovn-controller</code> &rarr; OpenFlow on <code>br-int</code> &rarr; the VM&rsquo;s TAP device. Name the artefact created at each step.</p>
+  </div>
+
+  <h2>Basic OVN vs full OpenStack/OVN</h2>
+  <table>
+    <thead><tr><th>Capability</th><th>Basic OVN (Lab 5)</th><th>Full OpenStack/OVN</th><th>Added in</th></tr></thead>
+    <tbody>
+      <tr><td>Addressing</td><td>Hardcoded MAC/IP on both sides</td><td>OVN-native DHCP + IPAM</td><td>Lab 6</td></tr>
+      <tr><td>Name resolution</td><td>None</td><td>OVN DNS / Neutron internal DNS</td><td>Lab 6</td></tr>
+      <tr><td>Metadata</td><td>None</td><td><code>localport</code> + metadata agent</td><td>Lab 6</td></tr>
+      <tr><td>Security</td><td>Per-switch, stateless ACLs</td><td>Per-port, stateful, grouped</td><td>Lab 6</td></tr>
+      <tr><td>Scale</td><td>Single chassis</td><td>Many chassis, Geneve overlay</td><td>Labs 7&ndash;8</td></tr>
+      <tr><td>Routing</td><td>Local only</td><td>True distributed routing (DVR)</td><td>Lab 8</td></tr>
+      <tr><td>Gateway</td><td>Single pinned chassis</td><td>HA chassis group + BFD failover</td><td>Lab 8</td></tr>
+      <tr><td>Floating IPs</td><td>One manual SNAT</td><td><code>dnat_and_snat</code>, distributed FIPs</td><td>Lab 8</td></tr>
+      <tr><td>Control plane</td><td>You type <code>ovn-nbctl</code></td><td>Neutron ML2/OVN types it for you</td><td>Lab 9</td></tr>
+      <tr><td>Provider networks</td><td>One <code>localnet</code> by hand</td><td>Flat/VLAN provider nets via Neutron</td><td>Lab 9</td></tr>
+    </tbody>
+  </table>
+  <p>The data plane is <strong>identical</strong>. What full OpenStack adds is automation, services, scale, and lifecycle management &mdash; not a different network.</p>
+
+  <h2>Review questions</h2>
+  <ol>
+    <li>Which Neutron agents does ML2/OVN eliminate, and what replaces each?</li>
+    <li>Why is <code>ovn-metadata-agent</code> the one agent that survives?</li>
+    <li>What is the naming convention Neutron uses for the OVN rows it creates, and why is that useful when debugging?</li>
+    <li>A VM cannot reach its floating IP. List the layers you would check, in order, and the command for each.</li>
+    <li>What must be configured on a compute node before a provider network works there?</li>
+    <li>If the Northbound DB is identical, what actually differs between your hand-built Lab 8 topology and a Neutron-built one?</li>
+  </ol>
+
+  <h2>Going further</h2>
+  <ul>
+    <li>Deploy OVN with SSL instead of plain TCP, and with a clustered (Raft) Northbound DB.</li>
+    <li>Add a second compute node and watch Nova schedule across chassis.</li>
+    <li>Enable <code>enable_distributed_floating_ip</code> and re-run the Lab 8 FIP comparison under Neutron.</li>
+    <li>Explore OVN load balancers &mdash; the mechanism behind Octavia&rsquo;s OVN provider.</li>
+  </ul>
+
+  <p style="margin-top:24px"><strong>You are done.</strong> You built a cloud network from a TAP device up to a Neutron API call, and you can now debug it at any layer.</p>
+
+  <nav class="pgn">
+    <a class="prev" data-go="lab8"><span class="lbl">Previous</span><span class="ttl">Lab 8 &mdash; Multi-chassis OVN</span></a>
     <a class="next" data-go="reference"><span class="lbl">Next</span><span class="ttl">Command reference</span></a>
   </nav>
 </section>
@@ -833,7 +1530,7 @@ footer.site{border-top:1px solid var(--border);padding:18px 32px;font-size:13px;
   </ul>
 
   <nav class="pgn">
-    <a class="prev" data-go="lab5"><span class="lbl">Previous</span><span class="ttl">Lab 5 &mdash; OVN basics</span></a>
+    <a class="prev" data-go="lab9"><span class="lbl">Previous</span><span class="ttl">Lab 9 &mdash; Neutron ML2/OVN</span></a>
     <a class="next" data-go="overview"><span class="lbl">Back to</span><span class="ttl">Overview</span></a>
   </nav>
 </section>
