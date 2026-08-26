@@ -508,5 +508,5 @@ the same network topology that OpenStack Neutron + OVN creates automatically.
 
 ---
 
-*Lab 5 of 5 — OpenStack Networking Workshop*
+*Lab 5 of 10 — OpenStack Networking Workshop*
 

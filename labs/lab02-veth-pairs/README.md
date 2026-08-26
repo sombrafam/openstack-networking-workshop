@@ -237,6 +237,6 @@ single bridge, without a full mesh of veth pairs. We will also provide the
 
 ---
 
-*Lab 2 of 5 — OpenStack Networking Workshop*
+*Lab 2 of 10 — OpenStack Networking Workshop*
 
 

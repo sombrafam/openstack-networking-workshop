@@ -54,13 +54,13 @@ The training is planned to be offered with the following format:
 | [Lab 3](labs/lab03-ovs-and-l2-switches/) | OVS as an L2 Switch | Open vSwitch | ~60 min    |
 | [Lab 4](labs/lab04-openflow-and-tunnels/) | OVS Advanced: OpenFlow Rules & Tunnels | Open vSwitch | ~60 min   |
 | [Lab 5](labs/lab05-ovn-basics/) | OVN Basics (Open Virtual Network) | OVN | ~60 min |
-| [Lab 6](labs/lab06-ovn-native-services/) | OVN Native Services: DHCP, DNS & Metadata | OVN | ~60 min    |
-| [Lab 7](labs/lab07-ovn-security-groups/) | Real Security Groups: Port Groups, Address Sets & Stateful ACLs | OVN | ~60 min    |
+| [Lab 6](labs/lab06-ovn-native-services/) | OVN Native Services & Security Groups: DHCP, DNS, Metadata, Port Groups & Stateful ACLs | OVN | ~90 min    |
+| [Lab 7](labs/lab07-multi-node-ovn/) | Multi-node OVN | OVN | ~60 min    |
 | [Lab 8](labs/lab08-ovn-multi-chassis/) | Multi-Chassis OVN: Geneve Tunnels, DVR, Gateway HA & Floating IPs | OVN | ~45 min    |
 | [Lab 9](labs/lab09-openstack-ml2-ovn/) | The OpenStack Layer: Neutron ML2/OVN (Capstone) | OVN | ~45 min    |
 | [Lab 10](labs/lab10-real-world-scenarios/) | Real-World Scenarios | Field Operations | ~45 min    |
 
-**Total estimated time:** ~10.00 hours (spread across bi-weekly sessions)
+**Total estimated time:** ~9.25 hours (spread across bi-weekly sessions)
 
 ## 📚 How It Works
 

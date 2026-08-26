@@ -251,5 +251,5 @@ provide the **solution** for this lab's exercises.
 
 ---
 
-*Lab 4 of 5 — OpenStack Networking Workshop*
+*Lab 4 of 10 — OpenStack Networking Workshop*
 

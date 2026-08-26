@@ -226,4 +226,4 @@ will also provide the **solution** for this lab's exercises.
 
 ---
 
-*Lab 1 of 5 — OpenStack Networking Workshop*
+*Lab 1 of 10 — OpenStack Networking Workshop*

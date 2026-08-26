@@ -281,4 +281,4 @@ bridges. We will also provide the **solution** for this lab's exercises.
 
 ---
 
-*Lab 3 of 5 — OpenStack Networking Workshop*
+*Lab 3 of 10 — OpenStack Networking Workshop*

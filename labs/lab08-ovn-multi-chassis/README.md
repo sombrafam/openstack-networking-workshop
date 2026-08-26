@@ -6,7 +6,7 @@
 | **Tier** | 3 – OVN |
 | **Duration** | ~45 minutes |
 | **Prerequisites** | Labs 1–7 completed; KVM/libvirt available (`virt-tools/`) |
-| **Builds on** | Lab 7 — Real Security Groups |
+| **Builds on** | Lab 7 — Multi-node OVN |
 
 ---
 
@@ -394,4 +394,4 @@ understand the full control-plane-to-data-plane path of OpenStack networking.
 
 ---
 
-*Lab 8 of 9 — OpenStack Networking Workshop*
+*Lab 8 of 10 — OpenStack Networking Workshop*
