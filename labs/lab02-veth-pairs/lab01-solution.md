@@ -51,6 +51,9 @@ sudo ip tuntap add dev tap-blue mode tap
 # Verify they exist on the host
 ip link show tap-red
 ip link show tap-blue
+
+# Show KVM processes in the host.
+ps aux | grep qemu-system
 ```
 
 **Expected output (for tap-red):**
