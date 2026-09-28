@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Tier** | 2 – Open vSwitch |
-| **Duration** | ~1.5 hours |
-| **Prerequisites** | Labs 1–3 completed |
+| **Duration** | ~2 hours |
+| **Prerequisites** | Labs 1–3 completed. A second host for Exercise 6. |
 | **Builds on** | Lab 3 — OVS as an L2 Switch |
 
 ---
@@ -16,7 +16,9 @@ By the end of this lab you will be able to:
 - Understand the structure of an OpenFlow flow (match + priority + action).
 - Add and delete custom flow rules with `ovs-ofctl`.
 - Implement a simple ACL by dropping traffic with a flow rule.
-- Create a VXLAN overlay tunnel between two OVS bridges.
+- Create a VXLAN overlay tunnel between two OVS bridges on separate hosts.
+- Capture and read encapsulated VXLAN traffic with `tcpdump`, at both the
+  underlay and overlay layers.
 - Explain why OVN uses Geneve instead of VXLAN.
 
 ---
@@ -84,6 +86,22 @@ Each VXLAN tunnel carries a **VNI (VXLAN Network Identifier)**, a 24-bit
 value that identifies which virtual network the frame belongs to
 (equivalent to a VLAN ID but with 16 million possible values).
 
+In OVS, a tunnel is simply **another port on the bridge**. You create it with
+`ovs-vsctl add-port ... -- set interface ... type=vxlan` and configure it with
+these options:
+
+| Option | Meaning |
+|--------|---------|
+| `type=vxlan` | Encapsulate in VXLAN (UDP 4789 by default) |
+| `options:remote_ip` | The **peer** host's underlay IP — the far tunnel endpoint |
+| `options:local_ip` | Optional; pin the source address on multi-homed hosts |
+| `options:key` | The VNI. A number pins it; `key=flow` lets flow rules set it |
+| `options:dst_port` | Override the UDP port (Linux VXLAN often uses 8472) |
+
+Once the port exists, OVS treats it like any other: the `NORMAL` action floods
+broadcasts out of it and learns MAC addresses on it, which is all that is
+needed for two bridges to merge into one broadcast domain.
+
 ### 2.4 Geneve vs. VXLAN
 
 OVN uses **Geneve** (Generic Network Virtualization Encapsulation) rather
@@ -120,6 +138,44 @@ the tunneling mechanics are identical.
  └──────────────────────────────────────────────────────────────────────┘
 ```
 
+### Two-host topology (Exercise 6)
+
+Both hosts run an **identical** set of namespaces — same names, same interface
+names, same bridge. Only the addresses differ. The VXLAN tunnel merges the two
+`br-int` bridges into a single broadcast domain.
+
+```
+       Host A — underlay 192.168.122.11        Host B — underlay 192.168.122.12
+ ┌──────────────────────────────────────┐ ┌──────────────────────────────────────┐
+ │  ┌─ns-a──┐  ┌─ns-b──┐  ┌─ns-c──┐     │ │  ┌─ns-a──┐  ┌─ns-b──┐  ┌─ns-c──┐     │
+ │  │veth-a │  │veth-b │  │veth-c │     │ │  │veth-a │  │veth-b │  │veth-c │     │
+ │  │  .10  │  │  .20  │  │  .30  │     │ │  │ .110  │  │ .120  │  │ .130  │     │
+ │  └───┬───┘  └───┬───┘  └───┬───┘     │ │  └───┬───┘  └───┬───┘  └───┬───┘     │
+ │  veth-a-ovs veth-b-ovs veth-c-ovs    │ │  veth-a-ovs veth-b-ovs veth-c-ovs    │
+ │      └──────────┼──────────┘         │ │      └──────────┼──────────┘         │
+ │            ┌────┴─────┐              │ │            ┌────┴─────┐              │
+ │            │  br-int  │              │ │            │  br-int  │              │
+ │            │  vxlan0 ─┼──────────────┼─┼────────────┼─ vxlan0  │              │
+ │            └──────────┘   VNI 100    │ │            └──────────┘              │
+ │                 ens3 ────────────────┼─┼─ UDP/4789 ─── ens3                   │
+ └──────────────────────────────────────┘ └──────────────────────────────────────┘
+
+   Overlay  192.168.100.0/24  — ONE broadcast domain spanning both hosts
+   Underlay 192.168.122.0/24  — the routed network that carries the tunnel
+```
+
+Note that `ns-a` exists on **both** hosts. Network namespaces are host-local
+objects, so the names may repeat freely — there is no conflict, exactly as two
+different hypervisors can each host a VM called `web-01`. The **IP addresses**,
+however, share one overlay subnet and must be unique, which is why Host B uses
+the `.110`/`.120`/`.130` range.
+
+Two IP layers are in play at once, and keeping them straight is the whole point
+of the exercise. The **underlay** addresses (`192.168.122.x`) belong to the
+physical hosts and appear in the outer UDP packet. The **overlay** addresses
+(`192.168.100.x`) belong to the namespaces and travel *inside* the
+encapsulation. `ns-a` on Host A and `ns-b` on Host B believe they share an
+Ethernet segment, even though their frames cross a routed network.
 
 ---
 
@@ -215,6 +271,139 @@ sudo ovs-dpctl dump-flows
 - What is the difference between `ovs-ofctl dump-flows` and `ovs-dpctl dump-flows`?
 
 
+### Exercise 6 — Connect Two Hosts with a VXLAN Tunnel
+
+> **This exercise needs a second machine.** Any two Linux hosts that can ping
+> each other will do — two VMs, two cloud instances, or a VM and your laptop.
+> Substitute your own underlay addresses for `192.168.122.11` (Host A) and
+> `192.168.122.12` (Host B) throughout.
+>
+> **Solutions are not given here.** Work through the tasks using the concepts
+> in §2.3 and the reference table in §5. The full commands and expected output
+> are published in `lab04-solution.md`, released with Lab 5.
+
+Everything so far has happened inside one kernel. A real cloud spreads a single
+tenant network across many hypervisors, and the mechanism that makes that
+possible is the **overlay tunnel**. Here you will build one by hand.
+
+**Goal:** make `ns-a` on Host A ping `ns-b` on Host B, as though every
+namespace on both machines were plugged into the same physical switch.
+
+#### Task 6.1 — Mirror the topology onto Host B
+
+Host A already has `br-int` with `ns-a`, `ns-b`, and `ns-c` from Lab 3. Build
+the **same** topology on Host B, with identical namespace, veth, and bridge
+names. Only the addresses change:
+
+| | Host A | Host B |
+|---|---|---|
+| `ns-a` / `veth-a` | 192.168.100.10/24 | 192.168.100.110/24 |
+| `ns-b` / `veth-b` | 192.168.100.20/24 | 192.168.100.120/24 |
+| `ns-c` / `veth-c` | 192.168.100.30/24 | 192.168.100.130/24 |
+
+**Requirements:**
+- Open vSwitch installed, with a bridge named `br-int` that is up.
+- Three namespaces, each holding one end of a veth pair; the other end is a
+  port on `br-int`.
+- Note the `/24` prefix: every namespace on **both** hosts is in one subnet.
+
+**Verify before continuing:**
+- `ns-a` → `ns-b` ping works *within* Host B (`.110` → `.120`).
+- `ns-a` on Host A cannot yet reach `.110` — there is no path between the
+  bridges.
+- Both hosts can ping each other on the **underlay** (`192.168.122.x`).
+
+> **Hint:** the Lab 3 build loop works unchanged on Host B; only the three
+> `ip addr add` lines need new values.
+
+#### Task 6.2 — Create the tunnel
+
+Add a VXLAN port called `vxlan0` to `br-int` on **each** host so that the two
+bridges join a single broadcast domain.
+
+**Requirements:**
+- Use VNI **100** on both ends.
+- Each end points at the *peer's* underlay address, not its own.
+- Leave the UDP port at the default.
+
+Review the options table in §2.3 to decide which settings you need.
+
+**Verify:**
+- `ovs-vsctl show` lists `vxlan0` on both hosts with no `error:` field.
+- `ovs-ofctl show br-int` gives the tunnel an OpenFlow port number.
+- `ovs-appctl dpif/show` lists the tunnel in the datapath.
+
+#### Task 6.3 — Prove the overlay works
+
+Demonstrate that the two bridges are now one Layer 2 segment.
+
+**Verify:**
+- `ns-a` on Host A pings `192.168.100.120` (`ns-b` on Host B).
+- Every namespace can reach all six addresses across both hosts.
+- The ARP table inside `ns-a` gains an entry for a remote address — ARP, a
+  **broadcast** protocol, crossed the tunnel.
+- The MAC learning table on Host A shows remote MACs learned on the `vxlan0`
+  port rather than on a veth port.
+
+> **Hint:** `ovs-appctl fdb/show br-int` prints the MAC learning table, with
+> the port each address was learned on.
+
+#### Task 6.4 — Observe the encapsulation
+
+This is the part worth slowing down for. Start a continuous ping between two
+namespaces on **different** hosts, then capture the same traffic from three
+vantage points and compare what each one shows you.
+
+| # | Capture point | What you should see |
+|---|---------------|---------------------|
+| 1 | The **underlay** interface (`ens3`), filtered to UDP 4789 | The outer host-to-host packet, the VNI, and the inner frame |
+| 2 | The **tunnel device** (`vxlan_sys_4789`) | The same frame, already decapsulated |
+| 3 | `veth-b` **inside the namespace** on Host B | Only the overlay — what a VM would see |
+
+**For each capture, answer:**
+- Which source and destination addresses appear?
+- Is the VNI visible? What value?
+- How many IP headers are present?
+
+**Then extend the observation:**
+- Flush the ARP cache in `ns-a` and ping again while capturing. What does a
+  **broadcast** look like on the wire, and where is it sent?
+- Write a capture to a `.pcap` file and reopen it. Wireshark has a full VXLAN
+  dissector if you prefer a GUI.
+- Check the tunnel port's packet counters and confirm they increment.
+
+> **Hints:** `vxlan_sys_4789` is the kernel-side device OVS creates for all
+> VXLAN tunnels sharing that UDP port. If tcpdump shows only opaque UDP
+> payload — which happens on a non-standard port — force the decoder with
+> `-T vxlan`. Use `-w <file>` to save a capture and `-r <file>` to read it
+> back. See §5 for the full command shapes.
+
+**Questions:**
+- How many IP headers does a single ping packet carry on the wire, and what
+  are the source and destination of each?
+- Why does the outer source UDP port change from packet to packet? (Hint:
+  it is derived from a hash of the inner flow — what is that good for?)
+- The overlay ping works, but `ping -s 1500` from `ns-a` fails or fragments.
+  How much overhead does VXLAN add, and what MTU should the namespaces use?
+- Both hosts have a namespace called `ns-a`. Why is that not a conflict, and
+  what *would* conflict if you got it wrong?
+- If you set `options:key=flow` instead of a fixed VNI, what would have to
+  supply the VNI, and why is that what OVN does?
+- Host A and Host B each have one tunnel port. How many tunnel ports would a
+  20-hypervisor cloud need if built this way? What does that suggest about
+  managing overlays by hand?
+
+#### Task 6.5 — Clean up
+
+Remove the tunnel from both hosts, and tear down the bridge and namespaces on
+Host B. Leave Host A's topology intact — Lab 5 starts from it.
+
+> **Troubleshooting:** if the overlay ping fails, check in this order —
+> underlay reachability (`ping` the peer), UDP 4789 not blocked by a firewall
+> or security group, `remote_ip` pointing at the *peer* rather than the local
+> host, matching `key` on both ends, and `ovs-vsctl show` reporting no
+> `error:` field on the interface.
+
 ---
 
 ## 5. Key Commands Reference
@@ -228,6 +417,21 @@ sudo ovs-dpctl dump-flows
 | `ovs-ofctl add-flow <bridge> <flow>` | Install a flow rule |
 | `ovs-ofctl del-flows <bridge> <match>` | Delete matching flow rules |
 
+**Tunnels and capture**
+
+| Command | Description |
+|---------|-------------|
+| `ovs-vsctl add-port <br> vxlan0 -- set interface vxlan0 type=vxlan options:remote_ip=<ip> options:key=<vni>` | Create a VXLAN tunnel port |
+| `ovs-vsctl del-port <br> vxlan0` | Remove the tunnel |
+| `ovs-appctl dpif/show` | Show datapath ports including tunnels |
+| `ovs-appctl fdb/show <bridge>` | MAC learning table — shows MACs learned via the tunnel |
+| `ovs-ofctl dump-ports <bridge> vxlan0` | Per-tunnel packet/byte counters |
+| `tcpdump -ni <underlay-if> -vv udp port 4789` | Watch encapsulated VXLAN traffic |
+| `tcpdump -ni <underlay-if> -vv -T vxlan udp port <port>` | Force the VXLAN decoder on a non-standard port |
+| `tcpdump -ni vxlan_sys_4789 -vv` | Watch decapsulated traffic on the tunnel device |
+| `tcpdump -ni <if> -s0 -w <file>.pcap udp port 4789` | Capture to a file for Wireshark |
+| `ip netns exec <ns> tcpdump -ni <veth>` | Watch the overlay from inside the namespace |
+
 ---
 
 ## 6. Review Questions
@@ -239,6 +443,16 @@ sudo ovs-dpctl dump-flows
    number of distinct values?
 5. OVN installs dozens of flow tables on `br-int`. Why does it use multiple
    tables rather than a flat list?
+6. In the Exercise 6 capture, which addresses appear in the outer IP header
+   and which in the inner one? Which pair would a physical router on the
+   path be able to see?
+7. VXLAN adds roughly 50 bytes of overhead. If the underlay MTU is 1500,
+   what MTU should the overlay interfaces use, and what symptom appears if
+   you get this wrong?
+8. Your overlay ping fails but the two hosts ping each other fine. List
+   three things you would check, and the command for each.
+9. Why is a full mesh of manually created tunnel ports impractical at
+   scale, and how does OVN avoid that problem?
 
 ---
 
